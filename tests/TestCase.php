@@ -3,8 +3,8 @@
 namespace Lucasgiovanny\LaravelPrestashop\Tests;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Orchestra\Testbench\TestCase as Orchestra;
 use Lucasgiovanny\LaravelPrestashop\LaravelPrestashopServiceProvider;
+use Orchestra\Testbench\TestCase as Orchestra;
 
 class TestCase extends Orchestra
 {
