@@ -2,9 +2,9 @@
 
 namespace Lucasgiovanny\LaravelPrestashop;
 
+use Lucasgiovanny\LaravelPrestashop\Commands\LaravelPrestashopCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Lucasgiovanny\LaravelPrestashop\Commands\LaravelPrestashopCommand;
 
 class LaravelPrestashopServiceProvider extends PackageServiceProvider
 {
