@@ -1,17 +1,17 @@
 {
-    "name": "vendor_slug/package_slug",
-    "description": ":package_description",
+    "name": "lucasgiovanny/laravel-prestashop",
+    "description": "Package for use PrestaShop Webservice on Laravel.",
     "keywords": [
-        ":vendor_name",
+        "lucasgiovanny",
         "laravel",
-        "package_slug"
+        "laravel-prestashop"
     ],
-    "homepage": "https://github.com/vendor_slug/package_slug",
+    "homepage": "https://github.com/lucasgiovanny/laravel-prestashop",
     "license": "MIT",
     "authors": [
         {
-            "name": ":author_name",
-            "email": "author@domain.com",
+            "name": "Lucas Giovanny",
+            "email": "lucasgiovanny@gmail.com",
             "role": "Developer"
         }
     ],
@@ -30,13 +30,13 @@
     },
     "autoload": {
         "psr-4": {
-            "VendorName\\Skeleton\\": "src",
-            "VendorName\\Skeleton\\Database\\Factories\\": "database/factories"
+            "Lucasgiovanny\\LaravelPrestashop\\": "src",
+            "Lucasgiovanny\\LaravelPrestashop\\Database\\Factories\\": "database/factories"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "VendorName\\Skeleton\\Tests\\": "tests"
+            "Lucasgiovanny\\LaravelPrestashop\\Tests\\": "tests"
         }
     },
     "scripts": {
@@ -50,10 +50,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "VendorName\\Skeleton\\SkeletonServiceProvider"
+                "Lucasgiovanny\\LaravelPrestashop\\LaravelPrestashopServiceProvider"
             ],
             "aliases": {
-                "Skeleton": "VendorName\\Skeleton\\SkeletonFacade"
+                "LaravelPrestashop": "Lucasgiovanny\\LaravelPrestashop\\LaravelPrestashopFacade"
             }
         }
     },

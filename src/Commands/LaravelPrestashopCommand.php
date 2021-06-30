@@ -1,12 +1,12 @@
 <?php
 
-namespace VendorName\Skeleton\Commands;
+namespace Lucasgiovanny\LaravelPrestashop\Commands;
 
 use Illuminate\Console\Command;
 
-class SkeletonCommand extends Command
+class LaravelPrestashopCommand extends Command
 {
-    public $signature = 'skeleton';
+    public $signature = 'laravel-prestashop';
 
     public $description = 'My command';
 
