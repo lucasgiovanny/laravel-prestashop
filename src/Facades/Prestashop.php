@@ -3,15 +3,15 @@
 namespace Lucasgiovanny\LaravelPrestashop\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use Lucasgiovanny\LaravelPrestashop\Prestashop;
+use Lucasgiovanny\LaravelPrestashop\Prestashop as PrestashopService;
 
 /**
  * @see \Lucasgiovanny\LaravelPrestashop\Prestashop
  */
-class LaravelPrestashop extends Facade
+class Prestashop extends Facade
 {
     protected static function getFacadeAccessor()
     {
-        return Prestashop::class;
+        return PrestashopService::class;
     }
 }
