@@ -78,7 +78,7 @@ class LaravelPrestashop
         'warehouse_product_locations',
         'warehouses',
         'weight_ranges',
-        'zones'
+        'zones',
     ];
 
     /**
@@ -93,7 +93,7 @@ class LaravelPrestashop
         'LITERAL',
         'BEGIN',
         'END',
-        'CONTAINS'
+        'CONTAINS',
     ];
 
     /**
@@ -177,7 +177,7 @@ class LaravelPrestashop
     public function shop(string $endpoint, string $token)
     {
         $this->endpoint = $endpoint;
-        $this->token    = $token;
+        $this->token = $token;
 
         return $this;
     }
