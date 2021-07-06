@@ -7,8 +7,6 @@ use GuzzleHttp\Client as HttpClient;
 
 class LaravelPrestashop
 {
-
-
     public const RESOURCES = [
         'addresses',
         'carriers',
@@ -75,7 +73,7 @@ class LaravelPrestashop
         'warehouse_product_locations',
         'warehouses',
         'weight_ranges',
-        'zones'
+        'zones',
     ];
 
     public const FILTER_OPERATORS = [
@@ -87,7 +85,7 @@ class LaravelPrestashop
         'INTERVAL',
         'LITERAL',
         'END',
-        'CONTAINS'
+        'CONTAINS',
     ];
 
     public $display = "full";
@@ -101,7 +99,7 @@ class LaravelPrestashop
     public function shop(string $endpoint, string $token)
     {
         $this->endpoint = $endpoint;
-        $this->token    = $token;
+        $this->token = $token;
 
         return $this;
     }
@@ -113,30 +111,30 @@ class LaravelPrestashop
         return $this;
     }
 
-    public function select(string|array $field)
+    public function select(string | array $field)
     {
         return $this->display($field);
     }
 
-    public function display(string|array $field)
+    public function display(string | array $field)
     {
         $this->display = $field;
 
         return $this;
     }
 
-    public function filter(string $field, string $operatorOrValue, string|array $value = null)
+    public function filter(string $field, string $operatorOrValue, string | array $value = null)
     {
         $operator = $value ? $operatorOrValue : '=';
 
-        if (!in_array(strtoupper($operator), self::FILTER_OPERATORS)) {
+        if (! in_array(strtoupper($operator), self::FILTER_OPERATORS)) {
             throw new Exception('Invalid filter operator');
         }
 
         $this->filters[] = [
-            'field'    => $field,
+            'field' => $field,
             'operator' => $operator,
-            'value'    => $value ?: $operatorOrValue
+            'value' => $value ?: $operatorOrValue,
         ];
 
         return $this;
@@ -180,11 +178,11 @@ class LaravelPrestashop
 
     protected function canExecute()
     {
-        if (!$this->model) {
+        if (! $this->model) {
             throw new Exception("You need to define a resource.");
         }
 
-        if (!$this->method) {
+        if (! $this->method) {
             throw new Exception("You need to define a method.");
         }
     }
