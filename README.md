@@ -13,30 +13,29 @@ You can install the package via composer:
 composer require lucasgiovanny/laravel-prestashop
 ```
 
-You can publish and run the migrations with:
-
-```bash
-php artisan vendor:publish --provider="Lucasgiovanny\LaravelPrestashop\LaravelPrestashopServiceProvider" --tag="laravel-prestashop-migrations"
-php artisan migrate
-```
 
 You can publish the config file with:
 ```bash
 php artisan vendor:publish --provider="Lucasgiovanny\LaravelPrestashop\LaravelPrestashopServiceProvider" --tag="laravel-prestashop-config"
 ```
 
-This is the contents of the published config file:
-
-```php
-return [
-];
-```
-
 ## Usage
 
+The idea of this package it's to easily use Prestashop webservice. You'll be able to use information as close as possible of Laravel's Eloquent syntax.
+
+### Retrieve information from a resource
+
 ```php
-$laravel-prestashop = new Lucasgiovanny\LaravelPrestashop();
-echo $laravel-prestashop->echoPhrase('Hello, Spatie!');
+use Lucasgiovanny\LaravelPrestashop\Facades\Prestashop;
+
+$orders = Prestashop::orders()->get();
+
+// This will output a Laravel collection with all orders
+foreach($orders as $order){
+    $order->id;
+    $order->total_paid;
+    ///...
+}
 ```
 
 ## Testing
