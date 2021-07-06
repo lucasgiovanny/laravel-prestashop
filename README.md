@@ -1,4 +1,4 @@
-# Package for use PrestaShop Webservice on Laravel.
+# Package for use PrestaShop Webservice on Laravel (IN DEVELOPMENT)
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/lucasgiovanny/laravel-prestashop.svg?style=flat-square)](https://packagist.org/packages/lucasgiovanny/laravel-prestashop)
 [![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/lucasgiovanny/laravel-prestashop/run-tests?label=tests)](https://github.com/lucasgiovanny/laravel-prestashop/actions?query=workflow%3Arun-tests+branch%3Amain)
