@@ -2,7 +2,6 @@
 
 namespace Lucasgiovanny\LaravelPrestashop;
 
-use Lucasgiovanny\LaravelPrestashop\Commands\LaravelPrestashopCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -17,9 +16,6 @@ class LaravelPrestashopServiceProvider extends PackageServiceProvider
          */
         $package
             ->name('laravel-prestashop')
-            ->hasConfigFile()
-            ->hasViews()
-            ->hasMigration('create_laravel-prestashop_table')
-            ->hasCommand(LaravelPrestashopCommand::class);
+            ->hasConfigFile();
     }
 }

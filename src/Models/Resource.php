@@ -1,6 +1,6 @@
 <?php
 
-namespace Lucasgiovanny\LaravelPrestashop;
+namespace Lucasgiovanny\LaravelPrestashop\Models;
 
 class Resource
 {

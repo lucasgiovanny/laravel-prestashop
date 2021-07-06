@@ -5,8 +5,9 @@ namespace Lucasgiovanny\LaravelPrestashop;
 use Exception;
 use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\RequestOptions;
+use Lucasgiovanny\LaravelPrestashop\Models\Resource;
 
-class LaravelPrestashop
+class Prestashop
 {
 
     /**
@@ -325,7 +326,7 @@ class LaravelPrestashop
     {
         $operator = $value ? $operatorOrValue : '=';
 
-        if (! in_array(strtoupper($operator), self::FILTER_OPERATORS)) {
+        if (!in_array(strtoupper($operator), self::FILTER_OPERATORS)) {
             throw new Exception('Invalid filter operator');
         }
 
@@ -421,19 +422,19 @@ class LaravelPrestashop
      */
     protected function canExecute()
     {
-        if (! $this->resource) {
+        if (!$this->resource) {
             throw new Exception("You need to define a resource.");
         }
 
-        if (! $this->method) {
+        if (!$this->method) {
             throw new Exception("You need to define a method.");
         }
 
-        if (! $this->url()) {
+        if (!$this->url()) {
             throw new Exception("No endpoint/URL defined.");
         }
 
-        if (! $this->token()) {
+        if (!$this->token()) {
             throw new Exception("No token defined.");
         }
 
@@ -556,7 +557,7 @@ class LaravelPrestashop
     {
         $response = $response[$this->resource] ?? null;
 
-        if (! $response) {
+        if (!$response) {
             throw new Exception("Fail on read resource response");
         }
 
