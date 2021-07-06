@@ -13,9 +13,9 @@ class Resource
 
     /**
      * Construct the resource model with attributes
-     * 
-     * @param array $attributes 
-     * 
+     *
+     * @param array $attributes
+     *
      * @return void
      */
     public function __construct(public array $attributes)
@@ -25,8 +25,8 @@ class Resource
     /**
      * Magic method to return attribute as property
      *
-     * @param string $name 
-     * 
+     * @param string $name
+     *
      * @return void
      */
     public function __get(string $name)
