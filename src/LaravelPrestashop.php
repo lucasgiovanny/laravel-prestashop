@@ -104,7 +104,7 @@ class LaravelPrestashop
     public $resource;
 
     /**
-     * Field from the resource to be added to the request 
+     * Field from the resource to be added to the request
      *
      * @var array
      */
@@ -151,15 +151,15 @@ class LaravelPrestashop
      * @var array
      */
     protected $headers = [
-        'Io-Format'     => 'JSON',
-        'Output-Format' => 'JSON'
+        'Io-Format' => 'JSON',
+        'Output-Format' => 'JSON',
     ];
 
     /**
      * Construct the class with dependencies
-     * 
-     * @param HttpClient $http 
-     * 
+     *
+     * @param HttpClient $http
+     *
      * @return void
      */
     public function __construct(protected HttpClient $http)
@@ -169,9 +169,9 @@ class LaravelPrestashop
     /**
      * Configure the Prestashop store
      *
-     * @param string $endpoint 
-     * @param string $token 
-     * 
+     * @param string $endpoint
+     * @param string $token
+     *
      * @return self
      */
     public function shop(string $endpoint, string $token)
@@ -185,9 +185,9 @@ class LaravelPrestashop
     /**
      * Set the resource to be used
      *
-     * @param string $resource 
-     * @param mixed  ...$arguments 
-     * 
+     * @param string $resource
+     * @param mixed  ...$arguments
+     *
      * @return self
      */
     public function resource(string $resource, ...$arguments)
@@ -199,10 +199,10 @@ class LaravelPrestashop
 
     /**
      * Define the request limit or index and limit
-     * 
-     * @param int $limit 
-     * @param int $index 
-     * 
+     *
+     * @param int $limit
+     * @param int $index
+     *
      * @return self
      */
     public function limit(int $limit, int $index = null)
@@ -214,28 +214,27 @@ class LaravelPrestashop
 
     /**
      * Add sort fields by ASC
-     * 
-     * @param string $field  
-     * @param string $order   
-     * 
+     *
+     * @param string $field
+     * @param string $order
+     *
      * @return self
      */
     protected function sort(string $field, string $order)
     {
         $this->sort[] = [
             'value' => $field,
-            'order' => $order
+            'order' => $order,
         ];
 
         return $this;
     }
 
-
     /**
      * Add sort fields by DESC
-     * 
-     * @param string $field  
-     * 
+     *
+     * @param string $field
+     *
      * @return self
      */
     public function sortBy(string $field)
@@ -247,9 +246,9 @@ class LaravelPrestashop
 
     /**
      * Add sort fields by DESC
-     * 
-     * @param string $field 
-     * 
+     *
+     * @param string $field
+     *
      * @return self
      */
     public function sortByDesc(string $field)
@@ -261,9 +260,9 @@ class LaravelPrestashop
 
     /**
      * Alias for sortBy
-     * 
-     * @param string $field  
-     * 
+     *
+     * @param string $field
+     *
      * @return self
      */
     public function orderBy(string $field)
@@ -275,9 +274,9 @@ class LaravelPrestashop
 
     /**
      * Alias for sortByDesc
-     * 
-     * @param string $field 
-     * 
+     *
+     * @param string $field
+     *
      * @return self
      */
     public function orderByDesc(string $field)
@@ -289,9 +288,9 @@ class LaravelPrestashop
 
     /**
      * Shortcut for display method
-     * 
-     * @param string|array $fields 
-     * 
+     *
+     * @param string|array $fields
+     *
      * @return self
      */
     public function select($fields)
@@ -301,9 +300,9 @@ class LaravelPrestashop
 
     /**
      * Select fields to be returned by webservice
-     * 
-     * @param string|array $fields 
-     * 
+     *
+     * @param string|array $fields
+     *
      * @return self
      */
     public function display($fields)
@@ -315,25 +314,25 @@ class LaravelPrestashop
 
     /**
      * Add a filter to the webservice call
-     * 
-     * @param string       $field 
-     * @param string       $operatorOrValue 
-     * @param string|array $value 
-     * 
+     *
+     * @param string       $field
+     * @param string       $operatorOrValue
+     * @param string|array $value
+     *
      * @return self
      */
     public function filter(string $field, string $operatorOrValue, $value = null)
     {
         $operator = $value ? $operatorOrValue : '=';
 
-        if (!in_array(strtoupper($operator), self::FILTER_OPERATORS)) {
+        if (! in_array(strtoupper($operator), self::FILTER_OPERATORS)) {
             throw new Exception('Invalid filter operator');
         }
 
         $this->filters[] = [
-            'field'    => $field,
+            'field' => $field,
             'operator' => strtoupper($operator),
-            'value'    => $value ?: $operatorOrValue
+            'value' => $value ?: $operatorOrValue,
         ];
 
         return $this;
@@ -341,11 +340,11 @@ class LaravelPrestashop
 
     /**
      * Shortcut to filter method
-     * 
-     * @param string       $field 
-     * @param string       $operatorOrValue 
-     * @param string|array $value 
-     * 
+     *
+     * @param string       $field
+     * @param string       $operatorOrValue
+     * @param string|array $value
+     *
      * @return self
      */
     public function where(string $field, string $operatorOrValue, $value = null)
@@ -396,10 +395,10 @@ class LaravelPrestashop
     /**
      * Internal method to make the correct request call
      *
-     * @param string $method 
-     * 
+     * @param string $method
+     *
      * @return \GuzzleHttp\Psr7\Response
-     * 
+     *
      * @throws Exception
      */
     protected function call(string $method)
@@ -416,25 +415,25 @@ class LaravelPrestashop
     /**
      * Check if the request can be executed
      *
-     * @return boolean
-     * 
+     * @return bool
+     *
      * @throws Exception
      */
     protected function canExecute()
     {
-        if (!$this->resource) {
+        if (! $this->resource) {
             throw new Exception("You need to define a resource.");
         }
 
-        if (!$this->method) {
+        if (! $this->method) {
             throw new Exception("You need to define a method.");
         }
 
-        if (!$this->url()) {
+        if (! $this->url()) {
             throw new Exception("No endpoint/URL defined.");
         }
 
-        if (!$this->token()) {
+        if (! $this->token()) {
             throw new Exception("No token defined.");
         }
 
@@ -457,7 +456,7 @@ class LaravelPrestashop
             [
                 RequestOptions::AUTH => [$this->token(), null],
                 RequestOptions::HEADERS => $this->headers,
-                RequestOptions::QUERY => $this->query()
+                RequestOptions::QUERY => $this->query(),
             ]
         );
 
@@ -483,9 +482,7 @@ class LaravelPrestashop
         }
 
         if ($this->filters) {
-
             foreach ($this->filters as $filter) {
-
                 if ($filter['operator'] === "|" || $filter['operator'] === "OR") {
                     $value = "[" . implode("|", $filter['value']) . "]";
                 }
@@ -515,7 +512,6 @@ class LaravelPrestashop
         }
 
         if ($this->sort) {
-
             foreach ($this->sort as $sort) {
                 $sortQuery[] = "{$sort['value']}_{$sort['order']}";
             }
@@ -550,17 +546,17 @@ class LaravelPrestashop
     /**
      * Format and delivery the response as Laravel Collection
      *
-     * @param array $response 
-     * 
+     * @param array $response
+     *
      * @return \Illuminate\Support\Collection
-     * 
+     *
      * @throws Exception
      */
     protected function response(array $response)
     {
         $response = $response[$this->resource] ?? null;
 
-        if (!$response) {
+        if (! $response) {
             throw new Exception("Fail on read resource response");
         }
 
@@ -574,9 +570,9 @@ class LaravelPrestashop
     /**
      * Create the method for each webservice resource
      *
-     * @param string $method 
-     * @param array  $arguments 
-     * 
+     * @param string $method
+     * @param array  $arguments
+     *
      * @return void
      */
     public function __call(string $method, array $arguments)
