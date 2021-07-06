@@ -2,7 +2,17 @@
 
 return [
 
-    'lang' => 1, // can be an array eg: [1,2]
+    /*
+    |--------------------------------------------------------------------------
+    | Prestashop shop configuration
+    |--------------------------------------------------------------------------
+    |
+    | Here you can define the connection configuration for your store
+    |
+    */
+    'shop' => [
+        'endpoint' => env('PRESTASHOP_ENDPOINT'),
+        'token'    => env('PRESTAHOP_TOKEN')
+    ]
 
-    'output_format' => 'xml' //xml or json
 ];

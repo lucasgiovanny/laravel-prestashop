@@ -4,11 +4,14 @@ namespace Lucasgiovanny\LaravelPrestashop;
 
 use Exception;
 use GuzzleHttp\Client as HttpClient;
+use GuzzleHttp\RequestOptions;
 
 class LaravelPrestashop
 {
 
-
+    /**
+     * All available resources on Prestashop webservice
+     */
     public const RESOURCES = [
         'addresses',
         'carriers',
@@ -78,26 +81,99 @@ class LaravelPrestashop
         'zones'
     ];
 
+    /**
+     * All allowed filters
+     */
     public const FILTER_OPERATORS = [
         '|',
         ',',
         '=',
-        'LIKE',
         'OR',
         'INTERVAL',
         'LITERAL',
+        'BEGIN',
         'END',
         'CONTAINS'
     ];
 
-    public $display = "full";
+    /**
+     * Resource that will be called
+     *
+     * @var string
+     */
+    public $resource;
 
+    /**
+     * Field from the resource to be added to the request 
+     *
+     * @var array
+     */
+    public $display;
+
+    /**
+     * Filters to be added to the request
+     *
+     * @var array
+     */
     public $filters;
 
+    /**
+     * Define the limit for the request
+     *
+     * @var array|int
+     */
+    public $limit;
+
+    /**
+     * Define the sort fields for the request
+     *
+     * @var array
+     */
+    public $sort;
+
+    /**
+     * On-demand endpoint definition
+     *
+     * @var string
+     */
+    public $endpoint;
+
+    /**
+     * On-demand token definition
+     *
+     * @var string
+     */
+    public $token;
+
+    /**
+     * Headers for request
+     *
+     * @var array
+     */
+    protected $headers = [
+        'Io-Format'     => 'JSON',
+        'Output-Format' => 'JSON'
+    ];
+
+    /**
+     * Construct the class with dependencies
+     * 
+     * @param HttpClient $http 
+     * 
+     * @return void
+     */
     public function __construct(protected HttpClient $http)
     {
     }
 
+    /**
+     * Configure the Prestashop store
+     *
+     * @param string $endpoint 
+     * @param string $token 
+     * 
+     * @return self
+     */
     public function shop(string $endpoint, string $token)
     {
         $this->endpoint = $endpoint;
@@ -106,26 +182,147 @@ class LaravelPrestashop
         return $this;
     }
 
-    public function model(string $model, ...$arguments)
+    /**
+     * Set the resource to be used
+     *
+     * @param string $resource 
+     * @param mixed  ...$arguments 
+     * 
+     * @return self
+     */
+    public function resource(string $resource, ...$arguments)
     {
-        $this->model = $model;
+        $this->resource = $resource;
 
         return $this;
     }
 
-    public function select(string|array $field)
+    /**
+     * Define the request limit or index and limit
+     * 
+     * @param int $limit 
+     * @param int $index 
+     * 
+     * @return self
+     */
+    public function limit(int $limit, int $index = null)
     {
-        return $this->display($field);
-    }
-
-    public function display(string|array $field)
-    {
-        $this->display = $field;
+        $this->limit = $index ? [$index, $limit] : $limit;
 
         return $this;
     }
 
-    public function filter(string $field, string $operatorOrValue, string|array $value = null)
+    /**
+     * Add sort fields by ASC
+     * 
+     * @param string $field  
+     * @param string $order   
+     * 
+     * @return self
+     */
+    protected function sort(string $field, string $order)
+    {
+        $this->sort[] = [
+            'value' => $field,
+            'order' => $order
+        ];
+
+        return $this;
+    }
+
+
+    /**
+     * Add sort fields by DESC
+     * 
+     * @param string $field  
+     * 
+     * @return self
+     */
+    public function sortBy(string $field)
+    {
+        $this->sort($field, "ASC");
+
+        return $this;
+    }
+
+    /**
+     * Add sort fields by DESC
+     * 
+     * @param string $field 
+     * 
+     * @return self
+     */
+    public function sortByDesc(string $field)
+    {
+        $this->sort($field, "DESC");
+
+        return $this;
+    }
+
+    /**
+     * Alias for sortBy
+     * 
+     * @param string $field  
+     * 
+     * @return self
+     */
+    public function orderBy(string $field)
+    {
+        $this->sort($field, "ASC");
+
+        return $this;
+    }
+
+    /**
+     * Alias for sortByDesc
+     * 
+     * @param string $field 
+     * 
+     * @return self
+     */
+    public function orderByDesc(string $field)
+    {
+        $this->sort($field, "DESC");
+
+        return $this;
+    }
+
+    /**
+     * Shortcut for display method
+     * 
+     * @param string|array $fields 
+     * 
+     * @return self
+     */
+    public function select($fields)
+    {
+        return $this->display($fields);
+    }
+
+    /**
+     * Select fields to be returned by webservice
+     * 
+     * @param string|array $fields 
+     * 
+     * @return self
+     */
+    public function display($fields)
+    {
+        $this->display = is_array($fields) ? $fields : [$fields];
+
+        return $this;
+    }
+
+    /**
+     * Add a filter to the webservice call
+     * 
+     * @param string       $field 
+     * @param string       $operatorOrValue 
+     * @param string|array $value 
+     * 
+     * @return self
+     */
+    public function filter(string $field, string $operatorOrValue, $value = null)
     {
         $operator = $value ? $operatorOrValue : '=';
 
@@ -135,75 +332,257 @@ class LaravelPrestashop
 
         $this->filters[] = [
             'field'    => $field,
-            'operator' => $operator,
+            'operator' => strtoupper($operator),
             'value'    => $value ?: $operatorOrValue
         ];
 
         return $this;
     }
 
-    public function where(string $field, string $operatorOrValue, string $value = null)
+    /**
+     * Shortcut to filter method
+     * 
+     * @param string       $field 
+     * @param string       $operatorOrValue 
+     * @param string|array $value 
+     * 
+     * @return self
+     */
+    public function where(string $field, string $operatorOrValue, $value = null)
     {
         return $this->filter($field, $operatorOrValue, $value);
     }
 
+    /**
+     * Execute the get request
+     *
+     * @return \GuzzleHttp\Psr7\Response
+     */
     public function get()
     {
         return $this->call("get");
     }
 
+    /**
+     * Execute the post request
+     *
+     * @return \GuzzleHttp\Psr7\Response
+     */
     public function create()
     {
         return $this->call("post");
     }
 
+    /**
+     * Execute the put request
+     *
+     * @return \GuzzleHttp\Psr7\Response
+     */
     public function update()
     {
         return $this->call("put");
     }
 
+    /**
+     * Execute the delete request
+     *
+     * @return \GuzzleHttp\Psr7\Response
+     */
     public function delete()
     {
         return $this->call("delete");
     }
 
+    /**
+     * Internal method to make the correct request call
+     *
+     * @param string $method 
+     * 
+     * @return \GuzzleHttp\Psr7\Response
+     * 
+     * @throws Exception
+     */
     protected function call(string $method)
     {
         $this->method = in_array($method, ["get", "post", "put", "delete"]) ? $method : null;
 
         if ($this->canExecute()) {
-            return $this->exec();
+            return $this->response($this->exec());
         }
 
         throw new Exception("Error occur when trying to execute the API call");
     }
 
+    /**
+     * Check if the request can be executed
+     *
+     * @return boolean
+     * 
+     * @throws Exception
+     */
     protected function canExecute()
     {
-        if (!$this->model) {
+        if (!$this->resource) {
             throw new Exception("You need to define a resource.");
         }
 
         if (!$this->method) {
             throw new Exception("You need to define a method.");
         }
+
+        if (!$this->url()) {
+            throw new Exception("No endpoint/URL defined.");
+        }
+
+        if (!$this->token()) {
+            throw new Exception("No token defined.");
+        }
+
+        return true;
     }
 
+    /**
+     * Execute the request to Prestashop webservice
+     *
+     * @return array
+     */
     protected function exec()
     {
-        $url = $this->url . "/" . $this->model;
+        $url = trim($this->url(), "/") . "/" . trim($this->resource, "/");
 
-        $headers = [];
 
-        $res = $this->http->request(strtoupper($this->method), $url, $headers);
+        $res = $this->http->request(
+            strtoupper($this->method),
+            $url,
+            [
+                RequestOptions::AUTH => [$this->token(), null],
+                RequestOptions::HEADERS => $this->headers,
+                RequestOptions::QUERY => $this->query()
+            ]
+        );
 
-        return $res->getBody();
+        return $res->getBody() ? json_decode($res->getBody(), true) : null;
     }
 
-    public function __call($method, $arguments)
+    /**
+     * Prepare query for request
+     *
+     * @return array
+     */
+    protected function query()
+    {
+        $query = [
+            'display' => $this->display ?
+                "[" . implode(",", $this->display) . "]" : 'full',
+        ];
+
+        if ($this->limit) {
+            $query['limit'] = is_array($this->limit) ?
+                "{$this->limit[0]}, {$this->limit[1]}"
+                : $this->limit;
+        }
+
+        if ($this->filters) {
+
+            foreach ($this->filters as $filter) {
+
+                if ($filter['operator'] === "|" || $filter['operator'] === "OR") {
+                    $value = "[" . implode("|", $filter['value']) . "]";
+                }
+
+                if ($filter['operator'] === "," || $filter['operator'] === "INTERVAL") {
+                    $value = "[" . implode(",", $filter['value']) . "]";
+                }
+
+                if ($filter['operator'] === "=" || $filter['operator'] === "LITERAL") {
+                    $value = "[" . $filter['value'] . "]";
+                }
+
+                if ($filter['operator'] === "BEGIN") {
+                    $value = "[" . $filter['value'] . "]%";
+                }
+
+                if ($filter['operator'] === "END") {
+                    $value = "%[" . $filter['value'] . "]";
+                }
+
+                if ($filter['operator'] === "CONTAINS") {
+                    $value = "%[" . $filter['value'] . "]%";
+                }
+
+                $query["filter[" . $filter['field'] . "]"] = $value;
+            }
+        }
+
+        if ($this->sort) {
+
+            foreach ($this->sort as $sort) {
+                $sortQuery[] = "{$sort['value']}_{$sort['order']}";
+            }
+
+            $query['sort'] = "[" . implode(",", $sortQuery) . "]";
+        }
+
+
+        return $query;
+    }
+
+    /**
+     * Define the endpoint for the request
+     *
+     * @return string
+     */
+    protected function token()
+    {
+        return $this->token ?: config('prestashop.shop.token');
+    }
+
+    /**
+     * Define the endpoint for the request
+     *
+     * @return string
+     */
+    protected function url()
+    {
+        return $this->endpoint ?: config('prestashop.shop.endpoint');
+    }
+
+    /**
+     * Format and delivery the response as Laravel Collection
+     *
+     * @param array $response 
+     * 
+     * @return \Illuminate\Support\Collection
+     * 
+     * @throws Exception
+     */
+    protected function response(array $response)
+    {
+        $response = $response[$this->resource] ?? null;
+
+        if (!$response) {
+            throw new Exception("Fail on read resource response");
+        }
+
+        foreach ($response as $element) {
+            $data[] = new Resource($element);
+        }
+
+        return collect($data ?? null);
+    }
+
+    /**
+     * Create the method for each webservice resource
+     *
+     * @param string $method 
+     * @param array  $arguments 
+     * 
+     * @return void
+     */
+    public function __call(string $method, array $arguments)
     {
         if (in_array($method, self::RESOURCES)) {
-            return $this->model($method, $arguments);
+            return $this->resource($method, $arguments);
         }
 
         throw new Exception("This is not a valid resource");

@@ -11,6 +11,6 @@ class LaravelPrestashopFacade extends Facade
 {
     protected static function getFacadeAccessor()
     {
-        return 'laravel-prestashop';
+        return LaravelPrestashop::class;
     }
 }
