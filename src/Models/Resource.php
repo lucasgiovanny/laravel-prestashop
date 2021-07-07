@@ -4,12 +4,6 @@ namespace Lucasgiovanny\LaravelPrestashop\Models;
 
 class Resource
 {
-    /**
-     * Resource name
-     *
-     * @var string
-     */
-    public $resource;
 
     /**
      * Construct the resource model with attributes
@@ -18,7 +12,7 @@ class Resource
      *
      * @return void
      */
-    public function __construct(public array $attributes)
+    public function __construct(public string $resource, public ?array $attributes = null)
     {
     }
 

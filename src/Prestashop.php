@@ -356,7 +356,7 @@ class Prestashop
     /**
      * Execute the get request
      *
-     * @return \GuzzleHttp\Psr7\Response
+     * @return \Illuminate\Support\Collection
      */
     public function get()
     {
@@ -364,9 +364,46 @@ class Prestashop
     }
 
     /**
+     * Execute the get request and return first result
+     *
+     * @return \Illuminate\Support\Collection|null
+     */
+    public function first()
+    {
+        $get = $this->call("get");
+        return $get->isNotEmpty() ? $get->first() : null;
+    }
+
+    /**
+     * Execute the get request with the condition applied
+     *
+     * @param int $id 
+     * 
+     * @return \Illuminate\Support\Collection|null
+     */
+    public function find(int $id)
+    {
+        if ($this->filters) {
+            throw new Exception("You can not use find method along with filters");
+        }
+
+        $this->filters = [
+            [
+                'field' => 'id',
+                'operator' => '=',
+                'value' => $id,
+            ]
+        ];
+
+        $get = $this->call("get");
+
+        return $get->isNotEmpty() ? $get->first() : null;
+    }
+
+    /**
      * Execute the post request
      *
-     * @return \GuzzleHttp\Psr7\Response
+     * @return \Illuminate\Support\Collection
      */
     public function create()
     {
@@ -376,7 +413,7 @@ class Prestashop
     /**
      * Execute the put request
      *
-     * @return \GuzzleHttp\Psr7\Response
+     * @return \Illuminate\Support\Collection
      */
     public function update()
     {
@@ -386,7 +423,7 @@ class Prestashop
     /**
      * Execute the delete request
      *
-     * @return \GuzzleHttp\Psr7\Response
+     * @return \Illuminate\Support\Collection
      */
     public function delete()
     {
@@ -398,7 +435,7 @@ class Prestashop
      *
      * @param string $method
      *
-     * @return \GuzzleHttp\Psr7\Response
+     * @return \Illuminate\Support\Collection
      *
      * @throws Exception
      */
@@ -555,14 +592,10 @@ class Prestashop
      */
     protected function response(array $response)
     {
-        $response = $response[$this->resource] ?? null;
-
-        if (!$response) {
-            throw new Exception("Fail on read resource response");
-        }
+        $response = $response[$this->resource] ?? $response;
 
         foreach ($response as $element) {
-            $data[] = new Resource($element);
+            $data[] = new Resource($this->resource, $element);
         }
 
         return collect($data ?? null);
