@@ -1,8 +1,8 @@
-# Package for use PrestaShop Webservice on Laravel (IN DEVELOPMENT)
+# Package for use PrestaShop Webservice on Laravel
+
+This package still in development. Feel free to contribute and give ideas!
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/lucasgiovanny/laravel-prestashop.svg?style=flat-square)](https://packagist.org/packages/lucasgiovanny/laravel-prestashop)
-[![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/lucasgiovanny/laravel-prestashop/run-tests?label=tests)](https://github.com/lucasgiovanny/laravel-prestashop/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/workflow/status/lucasgiovanny/laravel-prestashop/Check%20&%20fix%20styling?label=code%20style)](https://github.com/lucasgiovanny/laravel-prestashop/actions?query=workflow%3A"Check+%26+fix+styling"+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/lucasgiovanny/laravel-prestashop.svg?style=flat-square)](https://packagist.org/packages/lucasgiovanny/laravel-prestashop)
 
 ## Installation
@@ -21,16 +21,42 @@ php artisan vendor:publish --provider="Lucasgiovanny\LaravelPrestashop\LaravelPr
 
 ## Usage
 
-The idea of this package it's to easily use Prestashop webservice. You'll be able to use information as close as possible of Laravel's Eloquent syntax.
+The idea of this package it's to easily use Prestashop webservice. You'll be able to retrieve and use your store data as close as possible from Laravel's Eloquent syntax.
+
+Before start, you need to configure your store webservice. You have two ways of do it:
+
+- 1. Set store on the config file
+
+To connect your Prestashop webservice, you can define this settings on your `.env` file:
+
+```env
+PRESTASHOP_ENDPOINT=https://prestashop.example/api
+PRESTASHOP_TOKEN=YOUR-WEBSERVICE-TOKEN
+```
+
+If you prefer, you can define it directly on the `config/prestashop.php` file
+
+- 2. On-demand
+
+You can also define the store directly when executing an action:
+```php
+use LucasGiovanny\LaravelPrestashop\Facades\Prestashop;
+
+Prestashop::store("https://prestashop.example.com/api", "YOUR-WEBSERVICE-TOKEN")
+    ->orders()
+    ->get();
+```
 
 ### Retrieve information from a resource
+
+Let's retrieve all Prestashop orders for example:
 
 ```php
 use Lucasgiovanny\LaravelPrestashop\Facades\Prestashop;
 
 $orders = Prestashop::orders()->get();
-
 // This will output a Laravel collection with all orders
+
 foreach($orders as $order){
     $order->id;
     $order->total_paid;
@@ -38,11 +64,46 @@ foreach($orders as $order){
 }
 ```
 
+### Choose the data you want to display
+
+You can use `display()` method or the `select()` method.
+
+```php
+use Lucasgiovanny\LaravelPrestashop\Facades\Prestashop;
+
+$orders = Prestashop::orders()->select('id')->get(); //It'll return only order id
+
+$orders = Prestashop::orders()->select(['id', 'reference','invoice_number'])->get();
+```
+
+### Using filters
+
+You can use `filter()` method or the `where()` method.
+
+```php
+use Lucasgiovanny\LaravelPrestashop\Facades\Prestashop;
+
+// Works like Laravel Eloquent query builder method! :)
+$orders = Prestashop::orders()->filter('reference', 'XKBKNABJK')->get();
+
+$orders = Prestashop::orders()->where('reference','BEGIN', 'XKB')->get();
+```
+
+### Find or first
+
+You can use `find()` method to find a resource by id or the `first()` method to retrieve the first element from the request.
+
+```php
+use Lucasgiovanny\LaravelPrestashop\Facades\Prestashop;
+
+$orders = Prestashop::customers()->find(23);
+
+$orders = Prestashop::customers()->first();
+```
+
 ## Testing
 
-```bash
-composer test
-```
+On the todo list.
 
 ## Changelog
 
