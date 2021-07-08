@@ -147,6 +147,13 @@ class Prestashop
     public $token;
 
     /**
+     * Shop ID
+     *
+     * @var string
+     */
+    public $shop;
+
+    /**
      * Headers for request
      *
      * @var array
@@ -159,7 +166,7 @@ class Prestashop
     /**
      * Construct the class with dependencies
      *
-     * @param HttpClient $http
+     * @param HttpClient $http 
      *
      * @return void
      */
@@ -170,15 +177,17 @@ class Prestashop
     /**
      * Configure the Prestashop store
      *
-     * @param string $endpoint
-     * @param string $token
+     * @param string $endpoint 
+     * @param string $token 
+     * @param int    $shop  
      *
      * @return self
      */
-    public function shop(string $endpoint, string $token)
+    public function shop(string $endpoint, string $token, int $shop = null)
     {
         $this->endpoint = $endpoint;
-        $this->token = $token;
+        $this->token    = $token;
+        $this->shop     = $shop;
 
         return $this;
     }
@@ -186,8 +195,8 @@ class Prestashop
     /**
      * Set the resource to be used
      *
-     * @param string $resource
-     * @param mixed  ...$arguments
+     * @param string $resource 
+     * @param mixed  ...$arguments 
      *
      * @return self
      */
@@ -201,8 +210,8 @@ class Prestashop
     /**
      * Define the request limit or index and limit
      *
-     * @param int $limit
-     * @param int $index
+     * @param int $limit 
+     * @param int $index 
      *
      * @return self
      */
@@ -216,8 +225,8 @@ class Prestashop
     /**
      * Add sort fields by ASC
      *
-     * @param string $field
-     * @param string $order
+     * @param string $field 
+     * @param string $order 
      *
      * @return self
      */
@@ -234,7 +243,7 @@ class Prestashop
     /**
      * Add sort fields by DESC
      *
-     * @param string $field
+     * @param string $field 
      *
      * @return self
      */
@@ -248,7 +257,7 @@ class Prestashop
     /**
      * Add sort fields by DESC
      *
-     * @param string $field
+     * @param string $field 
      *
      * @return self
      */
@@ -262,7 +271,7 @@ class Prestashop
     /**
      * Alias for sortBy
      *
-     * @param string $field
+     * @param string $field 
      *
      * @return self
      */
@@ -276,7 +285,7 @@ class Prestashop
     /**
      * Alias for sortByDesc
      *
-     * @param string $field
+     * @param string $field 
      *
      * @return self
      */
@@ -290,7 +299,7 @@ class Prestashop
     /**
      * Shortcut for display method
      *
-     * @param string|array $fields
+     * @param string|array $fields 
      *
      * @return self
      */
@@ -302,7 +311,7 @@ class Prestashop
     /**
      * Select fields to be returned by webservice
      *
-     * @param string|array $fields
+     * @param string|array $fields 
      *
      * @return self
      */
@@ -316,9 +325,9 @@ class Prestashop
     /**
      * Add a filter to the webservice call
      *
-     * @param string       $field
-     * @param string       $operatorOrValue
-     * @param string|array $value
+     * @param string       $field 
+     * @param string       $operatorOrValue 
+     * @param string|array $value 
      *
      * @return self
      */
@@ -342,9 +351,9 @@ class Prestashop
     /**
      * Shortcut to filter method
      *
-     * @param string       $field
-     * @param string       $operatorOrValue
-     * @param string|array $value
+     * @param string       $field 
+     * @param string       $operatorOrValue 
+     * @param string|array $value 
      *
      * @return self
      */
@@ -354,7 +363,7 @@ class Prestashop
     }
 
     /**
-     * Execute the get request
+     * Execute the get request 
      *
      * @return \Illuminate\Support\Collection
      */
@@ -364,7 +373,7 @@ class Prestashop
     }
 
     /**
-     * Execute the get request and return first result
+     * Execute the get request and return first result 
      *
      * @return \Illuminate\Support\Collection|null
      */
@@ -375,7 +384,7 @@ class Prestashop
     }
 
     /**
-     * Execute the get request with the condition applied
+     * Execute the get request with the condition applied 
      *
      * @param int $id 
      * 
@@ -400,40 +409,11 @@ class Prestashop
         return $get->isNotEmpty() ? $get->first() : null;
     }
 
-    /**
-     * Execute the post request
-     *
-     * @return \Illuminate\Support\Collection
-     */
-    public function create()
-    {
-        return $this->call("post");
-    }
-
-    /**
-     * Execute the put request
-     *
-     * @return \Illuminate\Support\Collection
-     */
-    public function update()
-    {
-        return $this->call("put");
-    }
-
-    /**
-     * Execute the delete request
-     *
-     * @return \Illuminate\Support\Collection
-     */
-    public function delete()
-    {
-        return $this->call("delete");
-    }
 
     /**
      * Internal method to make the correct request call
      *
-     * @param string $method
+     * @param string $method 
      *
      * @return \Illuminate\Support\Collection
      *
@@ -557,6 +537,10 @@ class Prestashop
             $query['sort'] = "[" . implode(",", $sortQuery) . "]";
         }
 
+        if ($this->shop) {
+            $query['id_shop'] = $this->shop;
+        }
+
 
         return $query;
     }
@@ -584,14 +568,18 @@ class Prestashop
     /**
      * Format and delivery the response as Laravel Collection
      *
-     * @param array $response
+     * @param array $response 
      *
      * @return \Illuminate\Support\Collection
      *
      * @throws Exception
      */
-    protected function response(array $response)
+    protected function response(?array $response)
     {
+        if (!$response) {
+            throw new Exception("No response from server");
+        }
+
         $response = $response[$this->resource] ?? $response;
 
         foreach ($response as $element) {
@@ -604,8 +592,8 @@ class Prestashop
     /**
      * Create the method for each webservice resource
      *
-     * @param string $method
-     * @param array  $arguments
+     * @param string $method 
+     * @param array  $arguments 
      *
      * @return void
      */
