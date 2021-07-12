@@ -25,7 +25,7 @@ The idea of this package it's to easily use Prestashop webservice. You'll be abl
 
 Before start, you need to configure your store webservice. You have two ways of do it:
 
-- 1. Set store on the config file
+1. Set store on the config file
 
 To connect your Prestashop webservice, you can define this settings on your `.env` file:
 
@@ -36,7 +36,7 @@ PRESTASHOP_TOKEN=YOUR-WEBSERVICE-TOKEN
 
 If you prefer, you can define it directly on the `config/prestashop.php` file
 
-- 2. On-demand
+2. On-demand
 
 You can also define the store directly when executing an action:
 ```php
