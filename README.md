@@ -3,8 +3,8 @@
 
 This package still in development. Feel free to contribute and give ideas!
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/lucasgiovanny/laravel-prestashop.svg?style=flat-square)](https://packagist.org/packages/lucasgiovanny/laravel-prestashop)
-[![Total Downloads](https://img.shields.io/packagist/dt/lucasgiovanny/laravel-prestashop.svg?style=flat-square)](https://packagist.org/packages/lucasgiovanny/laravel-prestashop)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/lucasgiovanny/laravel-prestashop?label=last%20version)
+![GitHub](https://img.shields.io/github/license/lucasgiovanny/laravel-prestashop)
 
 ## Documentation
 
