@@ -11,7 +11,7 @@ class Prestashop
 {
 
     /**
-     * All available resources on Prestashop webservice
+     * All available resources on Prestashop web service
      */
     public const RESOURCES = [
         'addresses',
@@ -166,7 +166,7 @@ class Prestashop
     /**
      * Construct the class with dependencies
      *
-     * @param HttpClient $http 
+     * @param HttpClient $http
      *
      * @return void
      */
@@ -177,17 +177,33 @@ class Prestashop
     /**
      * Configure the Prestashop store
      *
-     * @param string $endpoint 
-     * @param string $token 
-     * @param int    $shop  
+     * @param string $endpoint
+     * @param string $token
+     * @param int    $shop
      *
-     * @return self
+     * @return $this
      */
     public function shop(string $endpoint, string $token, int $shop = null)
     {
         $this->endpoint = $endpoint;
-        $this->token    = $token;
-        $this->shop     = $shop;
+        $this->token = $token;
+        $this->shop = $shop;
+
+        return $this;
+    }
+
+    /**
+     * Configure the Prestashop store
+     *
+     * @param string $endpoint
+     * @param string $token
+     * @param int    $shop
+     *
+     * @return $this
+     */
+    public function store(string $endpoint, string $token, int $shop = null)
+    {
+        $this->shop($endpoint, $token, $shop);
 
         return $this;
     }
@@ -195,10 +211,10 @@ class Prestashop
     /**
      * Set the resource to be used
      *
-     * @param string $resource 
-     * @param mixed  ...$arguments 
+     * @param string $resource
+     * @param mixed  ...$arguments
      *
-     * @return self
+     * @return $this
      */
     public function resource(string $resource, ...$arguments)
     {
@@ -210,10 +226,10 @@ class Prestashop
     /**
      * Define the request limit or index and limit
      *
-     * @param int $limit 
-     * @param int $index 
+     * @param int $limit
+     * @param int $index
      *
-     * @return self
+     * @return $this
      */
     public function limit(int $limit, int $index = null)
     {
@@ -225,10 +241,10 @@ class Prestashop
     /**
      * Add sort fields by ASC
      *
-     * @param string $field 
-     * @param string $order 
+     * @param string $field
+     * @param string $order
      *
-     * @return self
+     * @return $this
      */
     protected function sort(string $field, string $order)
     {
@@ -243,9 +259,9 @@ class Prestashop
     /**
      * Add sort fields by DESC
      *
-     * @param string $field 
+     * @param string $field
      *
-     * @return self
+     * @return $this
      */
     public function sortBy(string $field)
     {
@@ -257,9 +273,9 @@ class Prestashop
     /**
      * Add sort fields by DESC
      *
-     * @param string $field 
+     * @param string $field
      *
-     * @return self
+     * @return $this
      */
     public function sortByDesc(string $field)
     {
@@ -271,9 +287,9 @@ class Prestashop
     /**
      * Alias for sortBy
      *
-     * @param string $field 
+     * @param string $field
      *
-     * @return self
+     * @return $this
      */
     public function orderBy(string $field)
     {
@@ -285,9 +301,9 @@ class Prestashop
     /**
      * Alias for sortByDesc
      *
-     * @param string $field 
+     * @param string $field
      *
-     * @return self
+     * @return $this
      */
     public function orderByDesc(string $field)
     {
@@ -299,9 +315,9 @@ class Prestashop
     /**
      * Shortcut for display method
      *
-     * @param string|array $fields 
+     * @param string|array $fields
      *
-     * @return self
+     * @return $this
      */
     public function select($fields)
     {
@@ -309,11 +325,11 @@ class Prestashop
     }
 
     /**
-     * Select fields to be returned by webservice
+     * Select fields to be returned by web service
      *
-     * @param string|array $fields 
+     * @param string|array $fields
      *
-     * @return self
+     * @return $this
      */
     public function display($fields)
     {
@@ -323,19 +339,19 @@ class Prestashop
     }
 
     /**
-     * Add a filter to the webservice call
+     * Add a filter to the web service call
      *
-     * @param string       $field 
-     * @param string       $operatorOrValue 
-     * @param string|array $value 
+     * @param string       $field
+     * @param string       $operatorOrValue
+     * @param string|array $value
      *
-     * @return self
+     * @return $this
      */
     public function filter(string $field, string $operatorOrValue, $value = null)
     {
         $operator = $value ? $operatorOrValue : '=';
 
-        if (!in_array(strtoupper($operator), self::FILTER_OPERATORS)) {
+        if (! in_array(strtoupper($operator), self::FILTER_OPERATORS)) {
             throw new Exception('Invalid filter operator');
         }
 
@@ -351,11 +367,11 @@ class Prestashop
     /**
      * Shortcut to filter method
      *
-     * @param string       $field 
-     * @param string       $operatorOrValue 
-     * @param string|array $value 
+     * @param string       $field
+     * @param string       $operatorOrValue
+     * @param string|array $value
      *
-     * @return self
+     * @return $this
      */
     public function where(string $field, string $operatorOrValue, $value = null)
     {
@@ -363,7 +379,7 @@ class Prestashop
     }
 
     /**
-     * Execute the get request 
+     * Execute the get request
      *
      * @return \Illuminate\Support\Collection
      */
@@ -373,21 +389,22 @@ class Prestashop
     }
 
     /**
-     * Execute the get request and return first result 
+     * Execute the get request and return first result
      *
      * @return \Illuminate\Support\Collection|null
      */
     public function first()
     {
         $get = $this->call("get");
+
         return $get->isNotEmpty() ? $get->first() : null;
     }
 
     /**
-     * Execute the get request with the condition applied 
+     * Execute the get request with the condition applied
      *
-     * @param int $id 
-     * 
+     * @param int $id
+     *
      * @return \Illuminate\Support\Collection|null
      */
     public function find(int $id)
@@ -401,7 +418,7 @@ class Prestashop
                 'field' => 'id',
                 'operator' => '=',
                 'value' => $id,
-            ]
+            ],
         ];
 
         $get = $this->call("get");
@@ -409,11 +426,10 @@ class Prestashop
         return $get->isNotEmpty() ? $get->first() : null;
     }
 
-
     /**
      * Internal method to make the correct request call
      *
-     * @param string $method 
+     * @param string $method
      *
      * @return \Illuminate\Support\Collection
      *
@@ -439,19 +455,19 @@ class Prestashop
      */
     protected function canExecute()
     {
-        if (!$this->resource) {
+        if (! $this->resource) {
             throw new Exception("You need to define a resource.");
         }
 
-        if (!$this->method) {
+        if (! $this->method) {
             throw new Exception("You need to define a method.");
         }
 
-        if (!$this->url()) {
+        if (! $this->url()) {
             throw new Exception("No endpoint/URL defined.");
         }
 
-        if (!$this->token()) {
+        if (! $this->token()) {
             throw new Exception("No token defined.");
         }
 
@@ -459,7 +475,7 @@ class Prestashop
     }
 
     /**
-     * Execute the request to Prestashop webservice
+     * Execute the request to Prestashop web service
      *
      * @return array
      */
@@ -568,7 +584,7 @@ class Prestashop
     /**
      * Format and delivery the response as Laravel Collection
      *
-     * @param array $response 
+     * @param array $response
      *
      * @return \Illuminate\Support\Collection
      *
@@ -576,7 +592,7 @@ class Prestashop
      */
     protected function response(?array $response)
     {
-        if (!$response) {
+        if (! $response) {
             throw new Exception("No response from server");
         }
 
@@ -590,12 +606,12 @@ class Prestashop
     }
 
     /**
-     * Create the method for each webservice resource
+     * Create the method for each web service resource
      *
-     * @param string $method 
-     * @param array  $arguments 
+     * @param string $method
+     * @param array  $arguments
      *
-     * @return void
+     * @return mixed
      */
     public function __call(string $method, array $arguments)
     {

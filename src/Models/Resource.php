@@ -4,12 +4,11 @@ namespace Lucasgiovanny\LaravelPrestashop\Models;
 
 class Resource
 {
-
     /**
      * Construct the resource model with attributes
      *
-     * @param string $resource 
-     * @param array  $attributes 
+     * @param string $resource
+     * @param array  $attributes
      *
      * @return void
      */
@@ -20,7 +19,7 @@ class Resource
     /**
      * Magic method to return attribute as property
      *
-     * @param string $name 
+     * @param string $name
      *
      * @return void
      */
