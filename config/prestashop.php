@@ -12,7 +12,7 @@ return [
     */
     'shop' => [
         'endpoint' => env('PRESTASHOP_ENDPOINT'),
-        'token'    => env('PRESTAHOP_TOKEN')
-    ]
+        'token' => env('PRESTASHOP_TOKEN'),
+    ],
 
 ];
