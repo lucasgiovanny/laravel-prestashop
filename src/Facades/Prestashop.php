@@ -19,6 +19,8 @@ class Prestashop extends Facade
      */
     protected static function getFacadeAccessor()
     {
+        self::clearResolvedInstance(PrestashopService::class);
+        
         return PrestashopService::class;
     }
 }

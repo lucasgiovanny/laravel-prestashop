@@ -6,6 +6,7 @@ use Exception;
 use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\RequestOptions;
 use Lucasgiovanny\LaravelPrestashop\Models\Resource;
+use Illuminate\Support\Str;
 
 class Prestashop
 {
@@ -542,6 +543,10 @@ class Prestashop
                 }
 
                 $query["filter[" . $filter['field'] . "]"] = $value;
+
+                if(Str::contains($filter['field'], 'date')){
+                    $query['date'] = 1;
+                }
             }
         }
 
@@ -556,7 +561,6 @@ class Prestashop
         if ($this->shop) {
             $query['id_shop'] = $this->shop;
         }
-
 
         return $query;
     }
