@@ -5,6 +5,9 @@ namespace Lucasgiovanny\LaravelPrestashop;
 use Exception;
 use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\RequestOptions;
+use Lucasgiovanny\LaravelPrestashop\Exceptions\ConfigException;
+use Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotConnectException;
+use Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotFindResource;
 use Lucasgiovanny\LaravelPrestashop\Models\Resource;
 use Illuminate\Support\Str;
 
@@ -54,7 +57,8 @@ class Prestashop
         'product_option_values',
         'product_options',
         'product_suppliers',
-        'products', 'search',
+        'products',
+        'search',
         'shop_groups',
         'shop_urls',
         'shops',
@@ -163,24 +167,26 @@ class Prestashop
         'Io-Format' => 'JSON',
         'Output-Format' => 'JSON',
     ];
+    protected HttpClient $http;
 
     /**
      * Construct the class with dependencies
      *
-     * @param HttpClient $http
+     * @param  HttpClient  $http
      *
      * @return void
      */
-    public function __construct(protected HttpClient $http)
+    public function __construct(HttpClient $http)
     {
+        $this->http = $http;
     }
 
     /**
      * Configure the Prestashop store
      *
-     * @param string $endpoint
-     * @param string $token
-     * @param int    $shop
+     * @param  string  $endpoint
+     * @param  string  $token
+     * @param  int  $shop
      *
      * @return $this
      */
@@ -196,9 +202,9 @@ class Prestashop
     /**
      * Configure the Prestashop store
      *
-     * @param string $endpoint
-     * @param string $token
-     * @param int    $shop
+     * @param  string  $endpoint
+     * @param  string  $token
+     * @param  int  $shop
      *
      * @return $this
      */
@@ -212,8 +218,8 @@ class Prestashop
     /**
      * Set the resource to be used
      *
-     * @param string $resource
-     * @param mixed  ...$arguments
+     * @param  string  $resource
+     * @param  mixed  ...$arguments
      *
      * @return $this
      */
@@ -227,8 +233,8 @@ class Prestashop
     /**
      * Define the request limit or index and limit
      *
-     * @param int $limit
-     * @param int $index
+     * @param  int  $limit
+     * @param  int  $index
      *
      * @return $this
      */
@@ -242,8 +248,8 @@ class Prestashop
     /**
      * Add sort fields by ASC
      *
-     * @param string $field
-     * @param string $order
+     * @param  string  $field
+     * @param  string  $order
      *
      * @return $this
      */
@@ -260,7 +266,7 @@ class Prestashop
     /**
      * Add sort fields by DESC
      *
-     * @param string $field
+     * @param  string  $field
      *
      * @return $this
      */
@@ -274,7 +280,7 @@ class Prestashop
     /**
      * Add sort fields by DESC
      *
-     * @param string $field
+     * @param  string  $field
      *
      * @return $this
      */
@@ -288,7 +294,7 @@ class Prestashop
     /**
      * Alias for sortBy
      *
-     * @param string $field
+     * @param  string  $field
      *
      * @return $this
      */
@@ -302,7 +308,7 @@ class Prestashop
     /**
      * Alias for sortByDesc
      *
-     * @param string $field
+     * @param  string  $field
      *
      * @return $this
      */
@@ -316,7 +322,7 @@ class Prestashop
     /**
      * Shortcut for display method
      *
-     * @param string|array $fields
+     * @param  string|array  $fields
      *
      * @return $this
      */
@@ -328,7 +334,7 @@ class Prestashop
     /**
      * Select fields to be returned by web service
      *
-     * @param string|array $fields
+     * @param  string|array  $fields
      *
      * @return $this
      */
@@ -342,9 +348,9 @@ class Prestashop
     /**
      * Add a filter to the web service call
      *
-     * @param string       $field
-     * @param string       $operatorOrValue
-     * @param string|array $value
+     * @param  string  $field
+     * @param  string  $operatorOrValue
+     * @param  string|array  $value
      *
      * @return $this
      */
@@ -352,7 +358,7 @@ class Prestashop
     {
         $operator = $value ? $operatorOrValue : '=';
 
-        if (! in_array(strtoupper($operator), self::FILTER_OPERATORS)) {
+        if (!in_array(strtoupper($operator), self::FILTER_OPERATORS)) {
             throw new Exception('Invalid filter operator');
         }
 
@@ -368,9 +374,9 @@ class Prestashop
     /**
      * Shortcut to filter method
      *
-     * @param string       $field
-     * @param string       $operatorOrValue
-     * @param string|array $value
+     * @param  string  $field
+     * @param  string  $operatorOrValue
+     * @param  string|array  $value
      *
      * @return $this
      */
@@ -404,7 +410,7 @@ class Prestashop
     /**
      * Execute the get request with the condition applied
      *
-     * @param int $id
+     * @param  int  $id
      *
      * @return \Illuminate\Support\Collection|null
      */
@@ -430,11 +436,11 @@ class Prestashop
     /**
      * Internal method to make the correct request call
      *
-     * @param string $method
+     * @param  string  $method
      *
      * @return \Illuminate\Support\Collection
      *
-     * @throws Exception
+     * @throws CouldNotConnectException|ConfigException
      */
     protected function call(string $method)
     {
@@ -444,7 +450,7 @@ class Prestashop
             return $this->response($this->exec());
         }
 
-        throw new Exception("Error occur when trying to execute the API call");
+        throw new CouldNotConnectException("Error occur when trying to execute the API call");
     }
 
     /**
@@ -452,24 +458,24 @@ class Prestashop
      *
      * @return bool
      *
-     * @throws Exception
+     * @throws ConfigException|CouldNotConnectException
      */
     protected function canExecute()
     {
-        if (! $this->resource) {
-            throw new Exception("You need to define a resource.");
+        if (!$this->resource) {
+            throw new ConfigException("You need to define a resource.");
         }
 
-        if (! $this->method) {
-            throw new Exception("You need to define a method.");
+        if (!$this->method) {
+            throw new ConfigException("You need to define a method.");
         }
 
-        if (! $this->url()) {
-            throw new Exception("No endpoint/URL defined.");
+        if (!$this->url()) {
+            throw new ConfigException("No endpoint/URL defined.");
         }
 
-        if (! $this->token()) {
-            throw new Exception("No token defined.");
+        if (!$this->token()) {
+            throw new ConfigException("Token is not configured");
         }
 
         return true;
@@ -482,7 +488,7 @@ class Prestashop
      */
     protected function exec()
     {
-        $url = trim($this->url(), "/") . "/" . trim($this->resource, "/");
+        $url = trim($this->url(), "/")."/".trim($this->resource, "/");
 
 
         $res = $this->http->request(
@@ -507,7 +513,7 @@ class Prestashop
     {
         $query = [
             'display' => $this->display ?
-                "[" . implode(",", $this->display) . "]" : 'full',
+                "[".implode(",", $this->display)."]" : 'full',
         ];
 
         if ($this->limit) {
@@ -519,32 +525,32 @@ class Prestashop
         if ($this->filters) {
             foreach ($this->filters as $filter) {
                 if ($filter['operator'] === "|" || $filter['operator'] === "OR") {
-                    $value = "[" . implode("|", $filter['value']) . "]";
+                    $value = "[".implode("|", $filter['value'])."]";
                 }
 
                 if ($filter['operator'] === "," || $filter['operator'] === "INTERVAL") {
-                    $value = "[" . implode(",", $filter['value']) . "]";
+                    $value = "[".implode(",", $filter['value'])."]";
                 }
 
                 if ($filter['operator'] === "=" || $filter['operator'] === "LITERAL") {
-                    $value = "[" . $filter['value'] . "]";
+                    $value = "[".$filter['value']."]";
                 }
 
                 if ($filter['operator'] === "BEGIN") {
-                    $value = "[" . $filter['value'] . "]%";
+                    $value = "[".$filter['value']."]%";
                 }
 
                 if ($filter['operator'] === "END") {
-                    $value = "%[" . $filter['value'] . "]";
+                    $value = "%[".$filter['value']."]";
                 }
 
                 if ($filter['operator'] === "CONTAINS") {
-                    $value = "%[" . $filter['value'] . "]%";
+                    $value = "%[".$filter['value']."]%";
                 }
 
-                $query["filter[" . $filter['field'] . "]"] = $value;
+                $query["filter[".$filter['field']."]"] = $value;
 
-                if(Str::contains($filter['field'], 'date')){
+                if (Str::contains($filter['field'], 'date')) {
                     $query['date'] = 1;
                 }
             }
@@ -555,7 +561,7 @@ class Prestashop
                 $sortQuery[] = "{$sort['value']}_{$sort['order']}";
             }
 
-            $query['sort'] = "[" . implode(",", $sortQuery) . "]";
+            $query['sort'] = "[".implode(",", $sortQuery)."]";
         }
 
         if ($this->shop) {
@@ -579,25 +585,29 @@ class Prestashop
      * Define the endpoint for the request
      *
      * @return string
+     * @throws CouldNotConnectException
      */
     protected function url()
     {
-        return $this->endpoint ?: config('prestashop.shop.endpoint');
+        if (Str::contains(config('prestashop.shop.endpoint'), 'api')) {
+            return $this->endpoint ?: config('prestashop.shop.endpoint');
+        }
+        throw new CouldNotConnectException("Prestashop endpoint is wrong");
     }
 
     /**
      * Format and delivery the response as Laravel Collection
      *
-     * @param array $response
+     * @param  array  $response
      *
      * @return \Illuminate\Support\Collection
      *
-     * @throws Exception
+     * @throws CouldNotConnectException
      */
     protected function response(?array $response)
     {
-        if (! $response) {
-            throw new Exception("No response from server");
+        if (!$response) {
+            throw new CouldNotConnectException("No response from server");
         }
 
         $response = $response[$this->resource] ?? $response;
@@ -612,10 +622,12 @@ class Prestashop
     /**
      * Create the method for each web service resource
      *
-     * @param string $method
-     * @param array  $arguments
+     * @param  string  $method
+     * @param  array  $arguments
      *
      * @return mixed
+     *
+     * @throws CouldNotFindResource
      */
     public function __call(string $method, array $arguments)
     {
@@ -623,6 +635,6 @@ class Prestashop
             return $this->resource($method, $arguments);
         }
 
-        throw new Exception("This is not a valid resource");
+        throw new CouldNotFindResource("This is not a valid resource");
     }
 }
