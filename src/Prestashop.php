@@ -578,11 +578,9 @@ class Prestashop
             //@todo return Model instance
             $this->resource = $method;
             $class = "\Lucasgiovanny\LaravelPrestashop\Resources\\".$method;
-            $modal = new $class($this, $arguments);
-
-            return $modal;
+            return new $class($this, $arguments);
             // return $this->resource($method, $arguments);
         }
-        //throw new CouldNotFindResource("This is not a valid resource");
+        throw new CouldNotFindResource("This is not a valid resource");
     }
 }
