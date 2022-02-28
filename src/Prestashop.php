@@ -195,8 +195,9 @@ class Prestashop
      *
      * @return $this
      */
-    public function shop(string $endpoint, string $token, int $shop = null): Prestashop
+    public function shop(string $shop_url,string $endpoint, string $token, int $shop = null): Prestashop
     {
+        $this->shop_url = $shop_url;
         $this->endpoint = $endpoint;
         $this->token = $token;
         $this->shop = $shop;
@@ -213,9 +214,9 @@ class Prestashop
      *
      * @return $this
      */
-    public function store(string $endpoint, string $token, int $shop = null): Prestashop
+    public function store(string $shop_url,string $endpoint, string $token, int $shop = null): Prestashop
     {
-        $this->shop($endpoint, $token, $shop);
+        $this->shop($shop_url,$endpoint, $token, $shop);
         return $this;
     }
 
@@ -363,21 +364,22 @@ class Prestashop
     protected function canExecute(): bool
     {
 
+
 //        if (!$this->resource) {
 //            throw new ConfigException("You need to define a resource.");
 //        }
 
-        if (!$this->method) {
-            throw new ConfigException("You need to define a method.");
-        }
+            if (!$this->method) {
+                throw new ConfigException("You need to define a method.");
+            }
 
-        if (!$this->shopUrl()) {
-            throw new ConfigException("No endpoint/URL defined.");
-        }
+            if (!$this->shopUrl()) {
+                throw new ConfigException("No endpoint/URL defined.");
+            }
 
-        if (!$this->token()) {
-            throw new ConfigException("Token is not configured");
-        }
+            if (!$this->token()) {
+                throw new ConfigException("Token is not configured");
+            }
 
         return true;
     }
@@ -522,9 +524,9 @@ class Prestashop
      * @return string
      * @throws CouldNotConnectException
      */
-    protected function shopUrl(): string
+    protected function shopUrl(): ?string
     {
-        return $this->shop_url = null ? $this->shop_url : config('prestashop.shop.shop_url');
+        return $this->shop_url == null ? $this->shop_url : config('prestashop.shop.shop_url');
     }
 
 
