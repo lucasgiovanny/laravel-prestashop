@@ -14,6 +14,27 @@ class Orders extends Model
     use Query\Findable;
     use Persistance\Storable;
 
+    protected static $rules = [
+        'id_address_delivery' => 'required|numeric',
+        'id_address_invoice' => 'required|numeric',
+        'id_cart' => 'required|numeric',
+        'id_currency' => 'required|numeric',
+        'id_lang' => 'required|numeric',
+        'id_customer' => 'required|numeric',
+        'id_carrier' => 'required|numeric',
+        'module' => 'required|string',
+        'payment' => 'required|string',
+        'total_paid' => 'required|numeric',
+        'total_paid_real' => 'required|numeric',
+        'total_products' => 'required|numeric',
+        'total_products_wt' => 'required|numeric',
+        'conversion_rate' => 'required|numeric',
+    ];
+
+    //Use this for custom messages
+    protected static $messages = [
+        'id_address_delivery.required' => 'Delivery address required!'
+    ];
     protected $fillable = [
         'id_address_delivery',
         'id_address_invoice',
@@ -64,4 +85,5 @@ class Orders extends Model
         'associations'
     ];
     protected $url = 'orders';
+
 }
