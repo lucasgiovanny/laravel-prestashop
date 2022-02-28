@@ -136,8 +136,8 @@ trait Findable
      */
     public function where(string $field, string $operatorOrValue, $value = null)
     {
-        $r = $this->connection()->filter($field, $operatorOrValue, $value)->get($this->url());
-        return new static($this->connection(), $r);
+        $this->connection()->filter($field, $operatorOrValue, $value);
+        return $this;
     }
 
     /**
@@ -183,6 +183,14 @@ trait Findable
         return new static($this->connection(), $r);
     }
 
+    /**
+     * Add a filter to query
+     * @throws Exception
+     */
+    public function filter(string $field, string $operatorOrValue, $value = null){
+        $this->connection()->filter($field,$operatorOrValue,$value);
+        return $this;
+    }
 
     public function getResultSet(array $params = [])
     {

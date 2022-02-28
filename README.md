@@ -29,6 +29,7 @@ Please review [our security policy](../../security/policy) on how to report secu
 ## Credits
 
 - [Lucas Giovanny](https://github.com/lucasgiovanny)
+- [Pepijn dik](https://github.com/pepijndik)
 - [All Contributors](../../contributors)
 
 ## License

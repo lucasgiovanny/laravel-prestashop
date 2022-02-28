@@ -5,51 +5,28 @@ namespace Lucasgiovanny\LaravelPrestashop\Tests\Support;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
-use Illuminate\Http\Response;
+use GuzzleHttp\Psr7\Response;
 use Lucasgiovanny\LaravelPrestashop\Prestashop;
+
 trait MocksPrestashopConnection
 {
-    protected function createMockConnection(callable $mockHandler): Prestashop
+    protected $mockHandler;
+
+
+    protected function createMockConnection(): Prestashop
     {
-        $handlerStack = HandlerStack::create($mockHandler);
-        $client = new Client(['handler' => $handlerStack]);
-        $connection = new Prestashop($client);
-        return $connection;
+
+        $httpClient = new Client([
+            'handler' => $this->mockHandler,
+        ]);
+        $presta = new Prestashop($httpClient);
+        $presta->shop("https://prestashop.pdik.nl","/api",'1224356432');
+        return $presta;
     }
 
-    /**
-     * @param  array|string|null  $response
-     *
-     * @return MockHandler
-     */
-    protected function createMockHandler($response = null): MockHandler
+    protected function createMockHandlerUsingFixture(string $fixture)
     {
-        return new MockHandler(
-            $this->normalizeResponse($response)
-        );
-    }
-
-    protected function createMockHandlerUsingFixture(string $fixture): MockHandler
-    {
-        return $this->createMockHandler(
-            file_get_contents(__DIR__."/../fixtures/$fixture")
-        );
-    }
-
-    protected function normalizeResponse($response = null): array
-    {
-        if (is_array($response)) {
-            return $response;
-        }
-
-        if (is_string($response)) {
-            return [new Response($response,200, [],)];
-        }
-
-        if ($response instanceof Response) {
-            return [$response];
-        }
-
-        return [];
+        $this->mockHandler = new MockHandler();
+        $this->mockHandler->append(new Response(200, [], file_get_contents(__DIR__."/../fixtures/$fixture")));
     }
 }
