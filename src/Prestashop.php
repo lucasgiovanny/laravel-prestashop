@@ -4,12 +4,15 @@ namespace Lucasgiovanny\LaravelPrestashop;
 
 use Exception;
 use GuzzleHttp\Client as HttpClient;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
 use Lucasgiovanny\LaravelPrestashop\Exceptions\ConfigException;
 use Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotConnectException;
 use Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotFindResource;
 use Lucasgiovanny\LaravelPrestashop\Models\Resource;
 use Illuminate\Support\Str;
+use Lucasgiovanny\LaravelPrestashop\Resources\Model;
+use SimpleXMLElement;
 
 class Prestashop
 {
@@ -107,67 +110,69 @@ class Prestashop
      *
      * @var string
      */
-    public $resource;
+    protected ?string $resource = null;
 
     /**
      * Field from the resource to be added to the request
      *
      * @var array
      */
-    public $display;
+    protected array $display = [];
 
     /**
      * Filters to be added to the request
      *
      * @var array
      */
-    public $filters;
+    public array $filters = [];
 
     /**
      * Define the limit for the request
      *
      * @var array|int
      */
-    public $limit;
+    protected $limit;
 
     /**
      * Define the sort fields for the request
      *
      * @var array
      */
-    public $sort;
+    protected array $sort = [];
 
     /**
      * On-demand endpoint definition
      *
      * @var string
      */
-    public $endpoint;
+    protected string $endpoint = "/api";
+    protected ?string $shop_url = null;
 
     /**
      * On-demand token definition
      *
      * @var string
      */
-    public $token;
+    public ?string $token = null;
 
     /**
      * Shop ID
      *
      * @var string
      */
-    public $shop;
+    public ?string $shop = null;
 
     /**
      * Headers for request
      *
      * @var array
      */
-    protected $headers = [
+    protected array $headers = [
         'Io-Format' => 'JSON',
         'Output-Format' => 'JSON',
     ];
     protected HttpClient $http;
+    private ?string $method;
 
     /**
      * Construct the class with dependencies
@@ -190,7 +195,7 @@ class Prestashop
      *
      * @return $this
      */
-    public function shop(string $endpoint, string $token, int $shop = null)
+    public function shop(string $endpoint, string $token, int $shop = null): Prestashop
     {
         $this->endpoint = $endpoint;
         $this->token = $token;
@@ -208,10 +213,9 @@ class Prestashop
      *
      * @return $this
      */
-    public function store(string $endpoint, string $token, int $shop = null)
+    public function store(string $endpoint, string $token, int $shop = null): Prestashop
     {
         $this->shop($endpoint, $token, $shop);
-
         return $this;
     }
 
@@ -223,7 +227,7 @@ class Prestashop
      *
      * @return $this
      */
-    public function resource(string $resource, ...$arguments)
+    public function resource(string $resource, ...$arguments): Prestashop
     {
         $this->resource = $resource;
 
@@ -238,199 +242,96 @@ class Prestashop
      *
      * @return $this
      */
-    public function limit(int $limit, int $index = null)
+    public function limit(int $limit, int $index = null): Prestashop
     {
         $this->limit = $index ? [$index, $limit] : $limit;
 
         return $this;
     }
 
-    /**
-     * Add sort fields by ASC
-     *
-     * @param  string  $field
-     * @param  string  $order
-     *
-     * @return $this
-     */
-    protected function sort(string $field, string $order)
-    {
-        $this->sort[] = [
-            'value' => $field,
-            'order' => $order,
-        ];
-
-        return $this;
-    }
-
-    /**
-     * Add sort fields by DESC
-     *
-     * @param  string  $field
-     *
-     * @return $this
-     */
-    public function sortBy(string $field)
-    {
-        $this->sort($field, "ASC");
-
-        return $this;
-    }
-
-    /**
-     * Add sort fields by DESC
-     *
-     * @param  string  $field
-     *
-     * @return $this
-     */
-    public function sortByDesc(string $field)
-    {
-        $this->sort($field, "DESC");
-
-        return $this;
-    }
-
-    /**
-     * Alias for sortBy
-     *
-     * @param  string  $field
-     *
-     * @return $this
-     */
-    public function orderBy(string $field)
-    {
-        $this->sort($field, "ASC");
-
-        return $this;
-    }
-
-    /**
-     * Alias for sortByDesc
-     *
-     * @param  string  $field
-     *
-     * @return $this
-     */
-    public function orderByDesc(string $field)
-    {
-        $this->sort($field, "DESC");
-
-        return $this;
-    }
-
-    /**
-     * Shortcut for display method
-     *
-     * @param  string|array  $fields
-     *
-     * @return $this
-     */
-    public function select($fields)
-    {
-        return $this->display($fields);
-    }
-
-    /**
-     * Select fields to be returned by web service
-     *
-     * @param  string|array  $fields
-     *
-     * @return $this
-     */
-    public function display($fields)
-    {
-        $this->display = is_array($fields) ? $fields : [$fields];
-
-        return $this;
-    }
-
-    /**
-     * Add a filter to the web service call
-     *
-     * @param  string  $field
-     * @param  string  $operatorOrValue
-     * @param  string|array  $value
-     *
-     * @return $this
-     */
-    public function filter(string $field, string $operatorOrValue, $value = null)
-    {
-        $operator = $value ? $operatorOrValue : '=';
-
-        if (!in_array(strtoupper($operator), self::FILTER_OPERATORS)) {
-            throw new Exception('Invalid filter operator');
-        }
-
-        $this->filters[] = [
-            'field' => $field,
-            'operator' => strtoupper($operator),
-            'value' => $value ?: $operatorOrValue,
-        ];
-
-        return $this;
-    }
-
-    /**
-     * Shortcut to filter method
-     *
-     * @param  string  $field
-     * @param  string  $operatorOrValue
-     * @param  string|array  $value
-     *
-     * @return $this
-     */
-    public function where(string $field, string $operatorOrValue, $value = null)
-    {
-        return $this->filter($field, $operatorOrValue, $value);
-    }
 
     /**
      * Execute the get request
      *
-     * @return \Illuminate\Support\Collection
+     * @throws CouldNotConnectException
      */
-    public function get()
+    public function get($url = null)
     {
-        return $this->call("get");
-    }
-
-    /**
-     * Execute the get request and return first result
-     *
-     * @return \Illuminate\Support\Collection|null
-     */
-    public function first()
-    {
-        $get = $this->call("get");
-
-        return $get->isNotEmpty() ? $get->first() : null;
-    }
-
-    /**
-     * Execute the get request with the condition applied
-     *
-     * @param  int  $id
-     *
-     * @return \Illuminate\Support\Collection|null
-     */
-    public function find(int $id)
-    {
-        if ($this->filters) {
-            throw new Exception("You can not use find method along with filters");
+        try {
+            return $this->call("get", $url);
+        } catch (Exception|GuzzleException $e) {
+            throw new CouldNotConnectException($e);
         }
+    }
 
-        $this->filters = [
-            [
-                'field' => 'id',
-                'operator' => '=',
-                'value' => $id,
-            ],
-        ];
+    /**
+     * @throws CouldNotConnectException
+     */
+    public function post($url, $body): \Illuminate\Support\Collection
+    {
+        try {
+            return $this->call("post", $url, $body);
+        } catch (Exception|GuzzleException $e) {
+            throw new CouldNotConnectException($e);
+        }
+    }
 
-        $get = $this->call("get");
+    /**
+     * @throws CouldNotConnectException
+     */
+    public function put($url, $body): \Illuminate\Support\Collection
+    {
+        try {
+            return $this->call("put", $url, $body);
+        } catch (Exception|GuzzleException $e) {
+            throw new CouldNotConnectException($e);
+        }
+    }
 
-        return $get->isNotEmpty() ? $get->first() : null;
+    /**
+     * @throws CouldNotConnectException
+     */
+    public function destroy($url): ?\Illuminate\Support\Collection
+    {
+        try {
+            return $this->call("DELETE", $url);
+        } catch (Exception|GuzzleException $e) {
+            throw new CouldNotConnectException($e);
+        }
+    }
+
+    /**
+     * Parse Array to Xml
+     * @param $data
+     * @param $xml_data
+     * @return void
+     */
+    private function parseArrayToXml($data, &$xml_data)
+    {
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                if (is_numeric($key)) {
+                    $key = 'item'.$key; //dealing with <0/>..<n/> issues
+                }
+                $subnode = $xml_data->addChild($key);
+                $this->parseArrayToXml($value, $subnode);
+            } else {
+                $xml_data->addChild("$key", htmlspecialchars("$value"));
+            }
+        }
+    }
+
+    /**
+     * Create xml from model
+     * @param $model
+     * @return void
+     */
+    private function createXmlFromModel($model)
+    {
+        $xml_data = new SimpleXMLElement('<?xml version="1.0"?><data></data>');
+        if ($model instanceof Model) {
+            $this->parseArrayToXml($model->attributes(), $xml_data);
+        }
     }
 
     /**
@@ -438,18 +339,17 @@ class Prestashop
      *
      * @param  string  $method
      *
-     * @return \Illuminate\Support\Collection
      *
      * @throws CouldNotConnectException|ConfigException
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    protected function call(string $method)
+    protected function call(string $method, string $url = null, mixed $body = null)
     {
         $this->method = in_array($method, ["get", "post", "put", "delete"]) ? $method : null;
 
         if ($this->canExecute()) {
-            return $this->response($this->exec());
+            return $this->response($this->exec($url, $body));
         }
-
         throw new CouldNotConnectException("Error occur when trying to execute the API call");
     }
 
@@ -460,17 +360,18 @@ class Prestashop
      *
      * @throws ConfigException|CouldNotConnectException
      */
-    protected function canExecute()
+    protected function canExecute(): bool
     {
-        if (!$this->resource) {
-            throw new ConfigException("You need to define a resource.");
-        }
+
+//        if (!$this->resource) {
+//            throw new ConfigException("You need to define a resource.");
+//        }
 
         if (!$this->method) {
             throw new ConfigException("You need to define a method.");
         }
 
-        if (!$this->url()) {
+        if (!$this->shopUrl()) {
             throw new ConfigException("No endpoint/URL defined.");
         }
 
@@ -484,12 +385,18 @@ class Prestashop
     /**
      * Execute the request to Prestashop web service
      *
+     * @param $url
      * @return array
+     * @throws CouldNotConnectException
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    protected function exec()
+    protected function exec($url = null, mixed $body = null): ?array
     {
-        $url = trim($this->url(), "/")."/".trim($this->resource, "/");
-
+        if (isset($url)) {
+            $url = $this->formatUrl($url);
+        } elseif (isset($this->resource)) {
+            $url = trim($this->shopUrl(), "/")."/".trim($this->resource, "/");
+        }
 
         $res = $this->http->request(
             strtoupper($this->method),
@@ -498,10 +405,38 @@ class Prestashop
                 RequestOptions::AUTH => [$this->token(), null],
                 RequestOptions::HEADERS => $this->headers,
                 RequestOptions::QUERY => $this->query(),
-            ]
+                'body' => $body //Not use a class var because then we needed to reset it every time..
+            ],
         );
 
         return $res->getBody() ? json_decode($res->getBody(), true) : null;
+    }
+
+     /**
+     * Add a filter to the web service call
+     *
+     * @param  string  $field
+     * @param  string  $operatorOrValue
+     * @param  string|array  $value
+     *
+     * @return $this
+     * @throws Exception
+     */
+
+    public function filter(string $field, string $operatorOrValue, $value = null): Prestashop
+    {
+        $operator = $value ? $operatorOrValue : '=';
+
+        if (!in_array(strtoupper($operator), Prestashop::FILTER_OPERATORS)) {
+            throw new Exception('Invalid filter operator');
+        }
+
+        $this->filters[] = [
+            'field' => $field,
+            'operator' => strtoupper($operator),
+            'value' => $value ?: $operatorOrValue,
+        ];
+        return $this;
     }
 
     /**
@@ -576,7 +511,7 @@ class Prestashop
      *
      * @return string
      */
-    protected function token()
+    protected function token(): string
     {
         return $this->token ?: config('prestashop.shop.token');
     }
@@ -587,36 +522,44 @@ class Prestashop
      * @return string
      * @throws CouldNotConnectException
      */
-    protected function url()
+    protected function shopUrl(): string
     {
-        if (Str::contains(config('prestashop.shop.endpoint'), 'api')) {
-            return $this->endpoint ?: config('prestashop.shop.endpoint');
-        }
-        throw new CouldNotConnectException("Prestashop endpoint is wrong");
+        return $this->shop_url = null ? $this->shop_url : config('prestashop.shop.shop_url');
+    }
+
+
+    private function getApiUrl(): string
+    {
+        return $this->shop_url.$this->endpoint;
+    }
+
+    private function formatUrl($endpoint): string
+    {
+        return implode('/', [
+            $this->getApiUrl(),
+            $endpoint,
+        ]);
     }
 
     /**
-     * Format and delivery the response as Laravel Collection
+     * Handle basic response
      *
      * @param  array  $response
      *
-     * @return \Illuminate\Support\Collection
+     * @return array
      *
      * @throws CouldNotConnectException
      */
-    protected function response(?array $response)
+    protected function response(?array $response): array
     {
         if (!$response) {
             throw new CouldNotConnectException("No response from server");
         }
-
         $response = $response[$this->resource] ?? $response;
-
-        foreach ($response as $element) {
-            $data[] = new Resource($this->resource, $element);
+        if(count($response) >=2){
+            return $response;
         }
-
-        return collect($data ?? null);
+        return $response[0];
     }
 
     /**
@@ -626,15 +569,20 @@ class Prestashop
      * @param  array  $arguments
      *
      * @return mixed
-     *
      * @throws CouldNotFindResource
      */
     public function __call(string $method, array $arguments)
     {
         if (in_array($method, self::RESOURCES)) {
-            return $this->resource($method, $arguments);
-        }
 
-        throw new CouldNotFindResource("This is not a valid resource");
+            //@todo return Model instance
+            $this->resource = $method;
+            $class = "\Lucasgiovanny\LaravelPrestashop\Resources\\".$method;
+            $modal = new $class($this, $arguments);
+
+            return $modal;
+            // return $this->resource($method, $arguments);
+        }
+        //throw new CouldNotFindResource("This is not a valid resource");
     }
 }
