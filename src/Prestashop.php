@@ -555,6 +555,7 @@ class Prestashop
         if (!$response) {
             throw new CouldNotConnectException("No response from server");
         }
+
         $response = $response[$this->resource] ?? $response;
         if(count($response) >=2){
             return $response;
@@ -578,11 +579,9 @@ class Prestashop
             //@todo return Model instance
             $this->resource = $method;
             $class = "\Lucasgiovanny\LaravelPrestashop\Resources\\".$method;
-            $modal = new $class($this, $arguments);
-
-            return $modal;
+            return new $class($this, $arguments);
             // return $this->resource($method, $arguments);
         }
-        //throw new CouldNotFindResource("This is not a valid resource");
+        throw new CouldNotFindResource("This is not a valid resource");
     }
 }
