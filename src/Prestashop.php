@@ -181,9 +181,13 @@ class Prestashop
      *
      * @return void
      */
-    public function __construct(HttpClient $http)
+    public function __construct(HttpClient $http = null)
     {
-        $this->http = $http;
+        if ($http) {
+            $this->http = $http;
+        } else {
+            $this->http = new HttpClient();
+        }
     }
 
     /**
@@ -195,7 +199,7 @@ class Prestashop
      *
      * @return $this
      */
-    public function shop(string $shop_url,string $endpoint, string $token, int $shop = null): Prestashop
+    public function shop(string $shop_url, string $endpoint, string $token, int $shop = null): Prestashop
     {
         $this->shop_url = $shop_url;
         $this->endpoint = $endpoint;
@@ -214,9 +218,9 @@ class Prestashop
      *
      * @return $this
      */
-    public function store(string $shop_url,string $endpoint, string $token, int $shop = null): Prestashop
+    public function store(string $shop_url, string $endpoint, string $token, int $shop = null): Prestashop
     {
-        $this->shop($shop_url,$endpoint, $token, $shop);
+        $this->shop($shop_url, $endpoint, $token, $shop);
         return $this;
     }
 
@@ -327,11 +331,11 @@ class Prestashop
      * @param $model
      * @return void
      */
-    private function createXmlFromModel($model)
+    protected function createXmlFromModel($model)
     {
         $xml_data = new SimpleXMLElement('<?xml version="1.0"?><data></data>');
         if ($model instanceof Model) {
-            $this->parseArrayToXml($model->attributes(), $xml_data);
+            $this->parseArrayToXml($model->json(0, true), $xml_data);
         }
     }
 
@@ -369,17 +373,17 @@ class Prestashop
 //            throw new ConfigException("You need to define a resource.");
 //        }
 
-            if (!$this->method) {
-                throw new ConfigException("You need to define a method.");
-            }
+        if (!$this->method) {
+            throw new ConfigException("You need to define a method.");
+        }
 
-            if (!$this->shopUrl()) {
-                throw new ConfigException("No endpoint/URL defined.");
-            }
+        if (!$this->shopUrl()) {
+            throw new ConfigException("No endpoint/URL defined.");
+        }
 
-            if (!$this->token()) {
-                throw new ConfigException("Token is not configured");
-            }
+        if (!$this->token()) {
+            throw new ConfigException("Token is not configured");
+        }
 
         return true;
     }
@@ -414,7 +418,7 @@ class Prestashop
         return $res->getBody() ? json_decode($res->getBody(), true) : null;
     }
 
-     /**
+    /**
      * Add a filter to the web service call
      *
      * @param  string  $field
@@ -558,7 +562,7 @@ class Prestashop
             throw new CouldNotConnectException("No response from server");
         }
         $response = $response[$this->resource] ?? $response;
-        if(count($response) >=2){
+        if (count($response) >= 2) {
             return $response;
         }
         return $response[0];
@@ -575,7 +579,8 @@ class Prestashop
      */
     public function __call(string $method, array $arguments)
     {
-        if (in_array($method, self::RESOURCES)) {
+        $smallLet = preg_replace('/[^A-Z]/', '', $method);
+        if (in_array($smallLet, self::RESOURCES)) {
 
             //@todo return Model instance
             $this->resource = $method;

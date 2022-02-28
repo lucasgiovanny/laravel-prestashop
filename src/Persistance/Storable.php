@@ -1,4 +1,5 @@
 <?php
+
 namespace Lucasgiovanny\LaravelPrestashop\Persistance;
 
 
@@ -53,7 +54,6 @@ trait Storable
         } else {
             $this->fill($this->insert());
         }
-
         return $this;
     }
 
@@ -64,30 +64,36 @@ trait Storable
      */
     public function insert()
     {
-        return $this->connection()->post($this->url(), $this->json(0, true));
+        return $this->connection()->post($this->url(), $this->connection()->createXmlFromModel($this));
     }
 
-    /**
-     * @return array|mixed
-     * @throws CouldNotConnectException
-     *
-     */
-    public function update()
-    {
-        $primaryKey = $this->primaryKeyContent();
+    public function create(array $attributes){
 
-        return $this->connection()->put($this->url()."/".$primaryKey, $this->json());
     }
 
-    /**
-     * @return array|mixed
-     * @throws CouldNotConnectException
-     *
-     */
-    public function delete()
-    {
-        $primaryKey = $this->primaryKeyContent();
+/**
+ * @return array|mixed
+ * @throws CouldNotConnectException
+ *
+ */
+public
+function update()
+{
+    $primaryKey = $this->primaryKeyContent();
 
-        return $this->connection()->destroy($this->url().'/'.$primaryKey);
-    }
+    return $this->connection()->put($this->url()."/".$primaryKey,
+        $this->connection()->createXmlFromModel($this->json()));
+}
+
+/**
+ * @return array|mixed
+ * @throws CouldNotConnectException
+ *
+ */
+public
+function delete()
+{
+    $primaryKey = $this->primaryKeyContent();
+    return $this->connection()->destroy($this->url().'/'.$primaryKey);
+}
 }

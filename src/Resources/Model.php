@@ -2,7 +2,12 @@
 
 namespace Lucasgiovanny\LaravelPrestashop\Resources;
 
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\MessageBag;
+use Illuminate\Validation\Validator;
+use Lucasgiovanny\LaravelPrestashop\Persistance\Storable;
 use Lucasgiovanny\LaravelPrestashop\Prestashop;
+use Nette\Utils\Validators;
 
 abstract class Model implements \JsonSerializable
 {
@@ -35,13 +40,98 @@ abstract class Model implements \JsonSerializable
      */
     protected $primaryKey = 'id';
 
-    public function __construct(Prestashop $connection = null,$attributes = [])
+
+    /**
+     * Error message bag
+     *
+     * @var MessageBag
+     */
+    protected $errors;
+
+    /**
+     * Validation rules
+     *
+     * @var array
+     */
+    protected static $rules = array();
+
+    /**
+     * Custom messages
+     *
+     * @var array
+     */
+    protected static $messages = array();
+    /**
+     * Validator instance
+     *
+     * @var Validator
+     */
+    protected $validator;
+
+    /**
+     * @param  Prestashop|null  $connection
+     * @param $attributes
+     * @param  Validator|null  $validator
+     */
+    public function __construct(Prestashop $connection =null, $attributes = [], Validator $validator = null)
     {
         //Set connection if there is, otherwise use Facade with default settings
         if (isset($connection)) {
             $this->connection = $connection;
         }
+        $this->validator = $validator ?: App::make('validator');
         $this->fill($attributes);
+    }
+
+    /**
+     * Listen for save event from storeable
+     */
+    protected static function boot()
+    {
+        static::save(function ($model) {
+            return $model->validate();
+        });
+    }
+
+    /**
+     * Validates current attributes against rules
+     */
+    public function validate(): bool
+    {
+        $v = $this->validator->make($this->attributes, static::$rules, static::$messages);
+
+        if ($v->passes()) {
+            return true;
+        }
+
+        $this->setErrors($v->messages());
+        return false;
+    }
+
+    /**
+     * Set error message bag
+     *
+     * @var MessageBag
+     */
+    protected function setErrors($errors)
+    {
+        $this->errors = $errors;
+    }
+
+    /**
+     * Retrieve error message bag
+     */
+    public function getErrors(): MessageBag
+    {
+        return $this->errors;
+    }
+
+    /**
+     * Inverse of wasSaved
+     */
+    public function hasErrors(): bool
+    {
+        return !empty($this->errors);
     }
 
     /**
