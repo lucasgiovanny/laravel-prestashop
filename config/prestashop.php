@@ -11,7 +11,8 @@ return [
     |
     */
     'shop' => [
-        'endpoint' => env('PRESTASHOP_ENDPOINT'),
+        'shop_url' => env('PRESTASHOP_URL'),
+        'endpoint' => 'api',
         'token' => env('PRESTASHOP_TOKEN'),
     ],
 
