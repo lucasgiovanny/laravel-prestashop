@@ -555,7 +555,6 @@ class Prestashop
         if (!$response) {
             throw new CouldNotConnectException("No response from server");
         }
-
         $response = $response[$this->resource] ?? $response;
         if(count($response) >=2){
             return $response;
