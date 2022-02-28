@@ -1,8 +1,8 @@
 <?php
 
 namespace Lucasgiovanny\LaravelPrestashop\Resources;
-use Pdik\LaravelPrestaShop\Query;
-use Pdik\LaravelPrestaShop\Persistance;
+use Lucasgiovanny\LaravelPrestashop\Query;
+use Lucasgiovanny\LaravelPrestashop\Persistance;
 
 class Customer extends Model
 {

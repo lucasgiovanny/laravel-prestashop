@@ -43,7 +43,7 @@ trait MocksPrestashopConnection
         }
 
         if (is_string($response)) {
-            return [new Response(200, [], $response)];
+            return [new Response($response,200, [],)];
         }
 
         if ($response instanceof Response) {

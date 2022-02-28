@@ -6,7 +6,7 @@ use Lucasgiovanny\LaravelPrestashop\Query\Resultset;
 use Lucasgiovanny\LaravelPrestashop\Resources\Orders;
 use PHPUnit\Framework\TestCase;
 use Lucasgiovanny\LaravelPrestashop\Tests\Support\MocksPrestashopConnection;
-class ResourceTest
+class ResourceTest extends TestCase
 {
  use MocksPrestashopConnection;
 
@@ -14,7 +14,6 @@ class ResourceTest
     {
         $handler = $this->createMockHandlerUsingFixture('order.json');
         $connection = $this->createMockConnection($handler);
-
         $response = (new Orders($connection))->find('6');
         $this->assertInstanceOf(Orders::class, $response);
         $this->assertEquals('6', $response->primaryKeyContent());
@@ -48,6 +47,7 @@ class ResourceTest
         $handler = $this->createMockHandlerUsingFixture('orders.json');
         $connection = $this->createMockConnection($handler);
         $response = (new Orders($connection))->getAsGenerator();
+
         $this->assertInstanceOf(Generator::class, $response);
         $this->assertCount(2, $response);
     }

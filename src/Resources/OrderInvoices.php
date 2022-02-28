@@ -1,12 +1,8 @@
 <?php
 
 namespace Lucasgiovanny\LaravelPrestashop\Resources;
-
-use Pdik\LaravelPrestaShop\Prestashop;
-
-use Pdik\LaravelPrestaShop\Query;
-use Pdik\LaravelPrestaShop\Persistance;
-use Pdik\LaravelPrestaShop\Resources\Model;
+use Lucasgiovanny\LaravelPrestashop\Query;
+use Lucasgiovanny\LaravelPrestashop\Persistance;
 
 class OrderInvoices extends Model
 {
