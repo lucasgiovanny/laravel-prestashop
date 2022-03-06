@@ -3,8 +3,15 @@
 namespace Lucasgiovanny\LaravelPrestashop\Persistance;
 
 
+use GuzzleHttp\Exception\GuzzleException;
+use Illuminate\Support\Collection;
 use Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotConnectException;
+use Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotPost;
+use Lucasgiovanny\LaravelPrestashop\Exceptions\ResourceMissingAttributes;
+use Lucasgiovanny\LaravelPrestashop\Exceptions\ResourceNotValidated;
 use Lucasgiovanny\LaravelPrestashop\Prestashop;
+use Lucasgiovanny\LaravelPrestashop\Resources\Model;
+use SimpleXMLElement;
 
 trait Storable
 {
@@ -41,59 +48,115 @@ trait Storable
      */
     abstract public function primaryKeyContent();
 
+
     /**
      * @return $this
      * @throws CouldNotConnectException
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws GuzzleException
      *
      */
-    public function save()
+    public function save(array $options = []): static
     {
-        if ($this->exists()) {
-            $this->fill($this->update());
+        if ($this->validate()) {
+            if ($this->exists()) {
+                $this->fill((array)$this->update());
+            } else {
+                $this->fill((array)$this->insert());
+            }
         } else {
-            $this->fill($this->insert());
+            throw new ResourceMissingAttributes($this->getErrors());
         }
+
         return $this;
     }
 
     /**
-     * @return array|mixed
-     * @throws CouldNotConnectException|\GuzzleHttp\Exception\GuzzleException
+     * @return Collection
+     * @throws CouldNotConnectException
      *
      */
-    public function insert()
+    public function insert(): Collection
     {
-        return $this->connection()->post($this->url(), $this->connection()->createXmlFromModel($this));
+        $xml = $this->createXmlFromModel($this);
+        return $this->connection()->post($this->url(), $xml);
     }
 
-    public function create(array $attributes){
-
+    /**
+     * @throws ResourceMissingAttributes
+     * @throws CouldNotConnectException
+     */
+    public function create(array $attributes): Collection
+    {
+        if ($this->validate()) {
+            $this->fill($attributes);
+            $xml = $this->createXmlFromModel($this);
+            return $this->connection()->post($this->url(), $xml);
+        } else {
+            throw new ResourceMissingAttributes($this->getErrors());
+        }
     }
 
-/**
- * @return array|mixed
- * @throws CouldNotConnectException
- *
- */
-public
-function update()
-{
-    $primaryKey = $this->primaryKeyContent();
+    /**
+     * @return Collection
+     * @throws CouldNotConnectException
+     *
+     */
+    public function update(): Collection
+    {
+        $primaryKey = $this->primaryKeyContent();
 
-    return $this->connection()->put($this->url()."/".$primaryKey,
-        $this->connection()->createXmlFromModel($this->json()));
-}
+        return $this->connection()->put($this->url()."/".$primaryKey,
+            $this->createXmlFromModel($this));
+    }
 
-/**
- * @return array|mixed
- * @throws CouldNotConnectException
- *
- */
-public
-function delete()
-{
-    $primaryKey = $this->primaryKeyContent();
-    return $this->connection()->destroy($this->url().'/'.$primaryKey);
-}
+    /**
+     * @return Collection|null
+     * @throws CouldNotConnectException
+     *
+     */
+    public function delete(): ?Collection
+    {
+        $primaryKey = $this->primaryKeyContent();
+        return $this->connection()->destroy($this->url().'/'.$primaryKey);
+    }
+
+    /**
+     * Parse Array to Xml
+     * @param $data
+     * @param $xml_data
+     * @return void
+     */
+    private function parseArrayToXml($data, $xml_data)
+    {
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+//                if (!is_numeric($key)) {
+//                  //  $key = 'item'.$key; //dealing with <0/>..<n/> issues
+//                }
+                $subnode = $xml_data->addChild($key);
+                $this->parseArrayToXml($value, $subnode);
+            } else {
+                $xml_data->addChild("$key", htmlspecialchars("$value"));
+            }
+        }
+        return $xml_data;
+    }
+
+    /**
+     * Create xml from model
+     * @param $model
+     * @return bool|string
+     */
+    protected function createXmlFromModel($model)
+    {
+
+        if ($model instanceof Model) {
+            $subModule = $model->url;
+            $xml_data = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><prestashop xmlns:xlink="http://www.w3.org/1999/xlink"></prestashop>');
+            $array[$subModule] = $model->attributes();
+            $this->parseArrayToXml($array, $xml_data);
+            return $xml_data->asXML();
+        }
+        return null;
+    }
 }

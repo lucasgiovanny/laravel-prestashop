@@ -33,7 +33,18 @@ class Orders extends Model
 
     //Use this for custom messages
     protected static $messages = [
-        'id_address_delivery.required' => 'Delivery address required!'
+        'id_address_delivery.required' => 'Delivery address is required',
+        'id_address_invoice.required' => 'Invoice address is required',
+        'id_cart.required' => 'Cart is required',
+        'id_currency.required' => 'currency is required',
+        'id_lang.required' => 'Lang is required',
+        'id_customer.required' => 'Customer is required',
+        'id_carrier.required' => 'carrier is required',
+        'module.required' => 'Module is required',
+        'total_paid.required' => 'Total paid is required',
+        'total_paid_real.required' => 'Total paid real is required',
+        'total_products.required' => 'Total products is required',
+        'total_products_wt.required' => 'Total products wt is required',
     ];
     protected $fillable = [
         'id_address_delivery',
