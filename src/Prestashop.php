@@ -4,8 +4,10 @@ namespace Lucasgiovanny\LaravelPrestashop;
 
 use Exception;
 use GuzzleHttp\Client as HttpClient;
+use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
+use JetBrains\PhpStorm\Pure;
 use Lucasgiovanny\LaravelPrestashop\Exceptions\ConfigException;
 use Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotConnectException;
 use Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotFindResource;
@@ -275,8 +277,10 @@ class Prestashop
     public function post($url, $body): \Illuminate\Support\Collection
     {
         try {
+            $this->filters = [];
             return $this->call("post", $url, $body);
         } catch (Exception|GuzzleException $e) {
+            dd($e);
             throw new CouldNotConnectException($e);
         }
     }
@@ -302,40 +306,6 @@ class Prestashop
             return $this->call("DELETE", $url);
         } catch (Exception|GuzzleException $e) {
             throw new CouldNotConnectException($e);
-        }
-    }
-
-    /**
-     * Parse Array to Xml
-     * @param $data
-     * @param $xml_data
-     * @return void
-     */
-    private function parseArrayToXml($data, &$xml_data)
-    {
-        foreach ($data as $key => $value) {
-            if (is_array($value)) {
-                if (is_numeric($key)) {
-                    $key = 'item'.$key; //dealing with <0/>..<n/> issues
-                }
-                $subnode = $xml_data->addChild($key);
-                $this->parseArrayToXml($value, $subnode);
-            } else {
-                $xml_data->addChild("$key", htmlspecialchars("$value"));
-            }
-        }
-    }
-
-    /**
-     * Create xml from model
-     * @param $model
-     * @return void
-     */
-    protected function createXmlFromModel($model)
-    {
-        $xml_data = new SimpleXMLElement('<?xml version="1.0"?><data></data>');
-        if ($model instanceof Model) {
-            $this->parseArrayToXml($model->json(0, true), $xml_data);
         }
     }
 
@@ -378,7 +348,7 @@ class Prestashop
         }
 
         if (!$this->shopUrl()) {
-            throw new ConfigException("No endpoint/URL defined.");
+            throw new ConfigException("No endpoint/ URL defined.");
         }
 
         if (!$this->token()) {
@@ -404,18 +374,28 @@ class Prestashop
             $url = trim($this->shopUrl(), "/")."/".trim($this->resource, "/");
         }
 
-        $res = $this->http->request(
-            strtoupper($this->method),
-            $url,
-            [
-                RequestOptions::AUTH => [$this->token(), null],
-                RequestOptions::HEADERS => $this->headers,
-                RequestOptions::QUERY => $this->query(),
-                'body' => $body //Not use a class var because then we needed to reset it every time..
-            ],
-        );
+        if ($this->method == "post") {
+            $this->headers = [
+                 'Content-Type' => 'text/xml; charset=UTF8',
+            ];
+        }
+        try {
 
-        return $res->getBody() ? json_decode($res->getBody(), true) : null;
+            $res = $this->http->request(
+                strtoupper($this->method),
+                $url,
+                [
+                    RequestOptions::AUTH => [$this->token(), null],
+                    RequestOptions::HEADERS => $this->headers,
+                    RequestOptions::QUERY => $this->query(),
+                    'body'=>$body
+                ],
+            );
+            return $res->getBody() ? json_decode($res->getBody(), true) : null;
+        } catch (ClientException $e){
+            throw new CouldNotConnectException($e);
+    }
+        return null;
     }
 
     /**
@@ -450,12 +430,16 @@ class Prestashop
      *
      * @return array
      */
-    protected function query()
+    #[Pure] protected function query(): array
     {
-        $query = [
-            'display' => $this->display ?
-                "[".implode(",", $this->display)."]" : 'full',
-        ];
+        $query = [];
+        if ($this->method != "post") {
+            $query = [
+                'display' => $this->display ?
+                    "[".implode(",", $this->display)."]" : 'full',
+            ];
+        }
+
 
         if ($this->limit) {
             $query['limit'] = is_array($this->limit) ?
@@ -526,17 +510,20 @@ class Prestashop
      * Define the endpoint for the request
      *
      * @return string
-     * @throws CouldNotConnectException
      */
     protected function shopUrl(): ?string
     {
-        return $this->shop_url == null ? $this->shop_url : config('prestashop.shop.shop_url');
+        return $this->shop_url != null ? $this->shop_url : config('prestashop.shop.shop_url');
     }
 
 
+    /**
+     * @return String
+     */
     private function getApiUrl(): string
     {
-        return $this->shop_url.$this->endpoint;
+
+        return $this->shopUrl().$this->endpoint;
     }
 
     private function formatUrl($endpoint): string
@@ -579,8 +566,7 @@ class Prestashop
      */
     public function __call(string $method, array $arguments)
     {
-        $smallLet = preg_replace('/[^A-Z]/', '', $method);
-        if (in_array($smallLet, self::RESOURCES)) {
+        if (in_array(strtolower($method), self::RESOURCES)) {
 
             //@todo return Model instance
             $this->resource = $method;
@@ -588,6 +574,6 @@ class Prestashop
             return new $class($this, $arguments);
             // return $this->resource($method, $arguments);
         }
-        throw new CouldNotFindResource("This is not a valid resource");
+        throw new CouldNotFindResource();
     }
 }

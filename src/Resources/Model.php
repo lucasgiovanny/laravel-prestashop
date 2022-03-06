@@ -83,15 +83,7 @@ abstract class Model implements \JsonSerializable
         $this->fill($attributes);
     }
 
-    /**
-     * Listen for save event from storeable
-     */
-    protected static function boot()
-    {
-        static::save(function ($model) {
-            return $model->validate();
-        });
-    }
+
 
     /**
      * Validates current attributes against rules

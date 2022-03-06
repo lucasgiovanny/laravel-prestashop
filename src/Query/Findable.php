@@ -33,7 +33,7 @@ trait Findable
      * @param  string  $order
      * @return $this
      */
-    protected function sort(string $field, string $order)
+    protected function sort(string $field, string $order): static
     {
         $this->connection()->sort[] = [
             'value' => $field,
@@ -49,7 +49,7 @@ trait Findable
      *
      * @return $this
      */
-    public function sortBy(string $field)
+    public function sortBy(string $field): static
     {
         $this->sort($field, "ASC");
 
@@ -63,7 +63,7 @@ trait Findable
      *
      * @return $this
      */
-    public function sortByDesc(string $field)
+    public function sortByDesc(string $field): static
     {
         $this->sort($field, "DESC");
 
@@ -77,7 +77,7 @@ trait Findable
      *
      * @return $this
      */
-    public function orderBy(string $field)
+    public function orderBy(string $field): static
     {
         $this->sort($field, "ASC");
 
@@ -91,7 +91,7 @@ trait Findable
      *
      * @return $this
      */
-    public function orderByDesc(string $field)
+    public function orderByDesc(string $field): static
     {
         $this->sort($field, "DESC");
 
@@ -105,7 +105,7 @@ trait Findable
      *
      * @return $this
      */
-    public function select($fields)
+    public function select($fields): static
     {
         return $this->display($fields);
     }
@@ -113,11 +113,11 @@ trait Findable
     /**
      * Select fields to be returned by web service
      *
-     * @param  string|array  $fields
+     * @param  array|string  $fields
      *
      * @return $this
      */
-    public function display($fields)
+    public function display(array|string $fields): static
     {
         $this->connection()->display = is_array($fields) ? $fields : [$fields];
 
@@ -129,12 +129,12 @@ trait Findable
      *
      * @param  string  $field
      * @param  string  $operatorOrValue
-     * @param  string|array  $value
+     * @param  array|string|null  $value
      *
      * @return $this
      * @throws Exception
      */
-    public function where(string $field, string $operatorOrValue, $value = null)
+    public function where(string $field, string $operatorOrValue, array|string $value = null): static
     {
         $this->connection()->filter($field, $operatorOrValue, $value);
         return $this;
@@ -146,7 +146,7 @@ trait Findable
      * @return Findable
      * @throws CouldNotConnectException
      */
-    public function first()
+    public function first(): static
     {
         $get = $this->connection()->get($this->url());
         return new static($this->connection(), $get[0]);
@@ -158,8 +158,9 @@ trait Findable
      * @param  int  $id
      *
      * @throws CouldNotFindFilter
+     * @throws CouldNotConnectException
      */
-    public function find(int $id)
+    public function find(int $id): static
     {
         if ($this->connection()->filters) {
             throw new CouldNotFindFilter("You can not use find method along with filters");
@@ -179,7 +180,7 @@ trait Findable
         } catch (GuzzleException|ConfigException|CouldNotConnectException $e) {
             throw new $e($e);
         }
-        $r = isset($get) ? $get : [];
+        $r = $get ?? [];
         return new static($this->connection(), $r);
     }
 
@@ -187,12 +188,13 @@ trait Findable
      * Add a filter to query
      * @throws Exception
      */
-    public function filter(string $field, string $operatorOrValue, $value = null){
+    public function filter(string $field, string $operatorOrValue, $value = null): static
+    {
         $this->connection()->filter($field,$operatorOrValue,$value);
         return $this;
     }
 
-    public function getResultSet(array $params = [])
+    public function getResultSet(array $params = []): Resultset
     {
         return new Resultset($this->connection(), $this->url(), get_class($this), $params);
     }
@@ -208,6 +210,9 @@ trait Findable
         return iterator_to_array($this->getAsGenerator($params));
     }
 
+    /**
+     * @throws CouldNotConnectException
+     */
     public function getAsGenerator(array $params = []): \Generator
     {
         $result = $this->connection()->get($this->url(), $params);
