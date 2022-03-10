@@ -136,7 +136,7 @@ trait Findable
      */
     public function where(string $field, string $operatorOrValue, array|string $value = null): static
     {
-        $this->connection()->filter($field, $operatorOrValue, $value);
+       $this->connection()->filter($field, $operatorOrValue, $value);
         return $this;
     }
 
