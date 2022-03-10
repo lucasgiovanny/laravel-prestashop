@@ -378,7 +378,6 @@ class Prestashop
                 'Content-Type' => 'text/xml; charset=UTF8',
             ];
         }
-
         try {
             $res = $this->http->request(
                 strtoupper($this->method),
@@ -563,7 +562,7 @@ class Prestashop
         if (count($response) >= 2) {
             return $response;
         }
-  
+
         return $response[0];
     }
 
