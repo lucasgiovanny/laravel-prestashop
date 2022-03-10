@@ -52,7 +52,7 @@ trait Storable
     /**
      * @return $this
      * @throws CouldNotConnectException
-     * @throws GuzzleException
+     * @throws ResourceMissingAttributes
      *
      */
     public function save(array $options = []): static
@@ -61,6 +61,7 @@ trait Storable
             if ($this->exists()) {
                 $this->fill((array)$this->update());
             } else {
+
                 $this->fill((array)$this->insert());
             }
         } else {
@@ -78,6 +79,7 @@ trait Storable
     public function insert(): Collection
     {
         $xml = $this->createXmlFromModel($this);
+
         return $this->connection()->post($this->url(), $xml);
     }
 
@@ -152,8 +154,12 @@ trait Storable
 
         if ($model instanceof Model) {
             $subModule = $model->url;
-            $xml_data = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><prestashop xmlns:xlink="http://www.w3.org/1999/xlink"></prestashop>');
-            $array[$subModule] = $model->attributes();
+            $xml_data = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><prestashop xmlns:xlink="http://www.w3.org/1999/xlink"/>');
+
+            //Get all fillables and fill array values with null, To later compine these
+            $values = array_fill(0, count($model->getFillable()), null);
+            $keys = array_combine($model->getFillable(), $values);
+            $array[$subModule] = array_merge($keys,$model->attributes());
             $this->parseArrayToXml($array, $xml_data);
             return $xml_data->asXML();
         }

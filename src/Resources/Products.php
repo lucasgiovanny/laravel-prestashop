@@ -2,12 +2,11 @@
 
 namespace Lucasgiovanny\LaravelPrestashop\Resources;
 
+use Lucasgiovanny\LaravelPrestashop\Prestashop;
 
-use Pdik\LaravelPrestaShop\Prestashop;
-
-use Pdik\LaravelPrestaShop\Query;
-use Pdik\LaravelPrestaShop\Persistance;
-use Pdik\LaravelPrestaShop\Resources\Model;
+use Lucasgiovanny\LaravelPrestashop\Query;
+use Lucasgiovanny\LaravelPrestashop\Persistance;
+use Lucasgiovanny\LaravelPrestashop\Resources\Model;
 
 class Products extends Model
 {
@@ -15,7 +14,7 @@ class Products extends Model
     use Persistance\Storable;
 
     protected $fillable = [
-         'id',
+        'id',
         'id_manufacturer',
         'id_supplier',
         'id_category_default',

@@ -29,6 +29,9 @@ class Orders extends Model
         'total_products' => 'required|numeric',
         'total_products_wt' => 'required|numeric',
         'conversion_rate' => 'required|numeric',
+        'associations' => 'array',
+        'associations.order_rows' => 'array',
+        'associations.order_rows.*.order_row' => 'array',
     ];
 
     //Use this for custom messages
