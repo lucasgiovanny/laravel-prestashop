@@ -7,7 +7,6 @@ use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
-use JetBrains\PhpStorm\Pure;
 use Lucasgiovanny\LaravelPrestashop\Exceptions\ConfigException;
 use Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotConnectException;
 use Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotFindResource;
@@ -127,6 +126,7 @@ class Prestashop
      * @var array
      */
     public array $filters = [];
+
 
     /**
      * Define the limit for the request
@@ -280,7 +280,6 @@ class Prestashop
             $this->filters = [];
             return $this->call("post", $url, $body);
         } catch (Exception|GuzzleException $e) {
-            dd($e);
             throw new CouldNotConnectException($e);
         }
     }
@@ -376,11 +375,11 @@ class Prestashop
 
         if ($this->method == "post") {
             $this->headers = [
-                 'Content-Type' => 'text/xml; charset=UTF8',
+                'Content-Type' => 'text/xml; charset=UTF8',
             ];
         }
-        try {
 
+        try {
             $res = $this->http->request(
                 strtoupper($this->method),
                 $url,
@@ -388,14 +387,15 @@ class Prestashop
                     RequestOptions::AUTH => [$this->token(), null],
                     RequestOptions::HEADERS => $this->headers,
                     RequestOptions::QUERY => $this->query(),
-                    'body'=>$body
+                    $body
                 ],
             );
+
             return $res->getBody() ? json_decode($res->getBody(), true) : null;
-        } catch (ClientException $e){
+        } catch (GuzzleException  $e) {
             throw new CouldNotConnectException($e);
-    }
-        return null;
+        }
+
     }
 
     /**
@@ -430,7 +430,7 @@ class Prestashop
      *
      * @return array
      */
-    #[Pure] protected function query(): array
+    protected function query(): array
     {
         $query = [];
         if ($this->method != "post") {
@@ -449,39 +449,48 @@ class Prestashop
 
         if ($this->filters) {
             foreach ($this->filters as $filter) {
-                if ($filter['operator'] === "|" || $filter['operator'] === "OR") {
-                    $value = "[".implode("|", $filter['value'])."]";
+                if (isset($filter['operator'])) {
+                    if ($filter['operator'] === "|" || $filter['operator'] === "OR") {
+                        $value = "[".implode("|", $filter['value'])."]";
+                    }
+
+                    if ($filter['operator'] === "," || $filter['operator'] === "INTERVAL") {
+                        $value = "[".implode(",", $filter['value'])."]";
+                    }
+
+                    if ($filter['operator'] === "=" || $filter['operator'] === "LITERAL") {
+                        $value = "[".$filter['value']."]";
+                    }
+
+                    if ($filter['operator'] === "BEGIN") {
+                        $value = "[".$filter['value']."]%";
+                    }
+
+                    if ($filter['operator'] === "END") {
+                        $value = "%[".$filter['value']."]";
+                    }
+
+                    if ($filter['operator'] === "CONTAINS") {
+                        $value = "%[".$filter['value']."]%";
+                    }
+                    $query["filter[".$filter['field']."]"] = $value;
+                }
+                if (isset($filter['schema'])) {
+                    $query = []; // clear because we wanted only a blank schema!
+                    $query["schema"] = $filter['schema'];
+                }
+                if (isset($filter['field'])) {
+                    if (Str::contains($filter['field'], 'date')) {
+                        $query['date'] = 1;
+                    }
                 }
 
-                if ($filter['operator'] === "," || $filter['operator'] === "INTERVAL") {
-                    $value = "[".implode(",", $filter['value'])."]";
-                }
-
-                if ($filter['operator'] === "=" || $filter['operator'] === "LITERAL") {
-                    $value = "[".$filter['value']."]";
-                }
-
-                if ($filter['operator'] === "BEGIN") {
-                    $value = "[".$filter['value']."]%";
-                }
-
-                if ($filter['operator'] === "END") {
-                    $value = "%[".$filter['value']."]";
-                }
-
-                if ($filter['operator'] === "CONTAINS") {
-                    $value = "%[".$filter['value']."]%";
-                }
-
-                $query["filter[".$filter['field']."]"] = $value;
-
-                if (Str::contains($filter['field'], 'date')) {
-                    $query['date'] = 1;
-                }
             }
         }
 
+
         if ($this->sort) {
+            $sortQuery = [];
             foreach ($this->sort as $sort) {
                 $sortQuery[] = "{$sort['value']}_{$sort['order']}";
             }
@@ -548,10 +557,13 @@ class Prestashop
         if (!$response) {
             throw new CouldNotConnectException("No response from server");
         }
+
         $response = $response[$this->resource] ?? $response;
+
         if (count($response) >= 2) {
             return $response;
         }
+  
         return $response[0];
     }
 
@@ -566,13 +578,15 @@ class Prestashop
      */
     public function __call(string $method, array $arguments)
     {
+        $method = strtolower($method);
         if (in_array(strtolower($method), self::RESOURCES)) {
 
             //@todo return Model instance
             $this->resource = $method;
+
             $class = "\Lucasgiovanny\LaravelPrestashop\Resources\\".$method;
             return new $class($this, $arguments);
-            // return $this->resource($method, $arguments);
+
         }
         throw new CouldNotFindResource();
     }

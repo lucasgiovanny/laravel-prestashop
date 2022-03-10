@@ -149,7 +149,12 @@ trait Findable
     public function first(): static
     {
         $get = $this->connection()->get($this->url());
-        return new static($this->connection(), $get[0]);
+        if(array_keys($get) == 0){
+            $response = $get[0];
+        }else{
+            $response = $get;
+        }
+        return new static($this->connection(), $response);
     }
 
     /**
@@ -190,8 +195,21 @@ trait Findable
      */
     public function filter(string $field, string $operatorOrValue, $value = null): static
     {
-        $this->connection()->filter($field,$operatorOrValue,$value);
+        $this->connection()->filter($field, $operatorOrValue, $value);
         return $this;
+    }
+
+    /**
+     * @throws CouldNotConnectException
+     */
+    public function getBlank()
+    {
+        $this->connection()->filters = [
+            [
+                'schema' => 'synopsis',
+            ],
+        ];
+        $r = $this->connection()->get($this->url());
     }
 
     public function getResultSet(array $params = []): Resultset
@@ -238,4 +256,5 @@ trait Findable
             yield new static($this->connection(), $row);
         }
     }
+
 }
