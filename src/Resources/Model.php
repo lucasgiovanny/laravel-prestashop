@@ -31,6 +31,10 @@ abstract class Model implements \JsonSerializable
     protected $fillable = [];
 
     /**
+     * @var string the xml header
+     */
+    protected $xml_header = '';
+    /**
      * @var string The URL endpoint of this model
      */
     protected $url = '';
