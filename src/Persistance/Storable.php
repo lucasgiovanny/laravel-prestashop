@@ -61,7 +61,7 @@ trait Storable
             if ($this->exists()) {
                 $this->fill((array)$this->update());
             } else {
-                $this->fill((array)$this->insert());
+                $this->fill($this->insert());
             }
             return $this;
         } else {
@@ -70,14 +70,12 @@ trait Storable
     }
 
     /**
-     * @return Collection
+     * @return array|bool|Collection|null
      * @throws CouldNotConnectException
-     *
      */
-    public function insert()
+    private function insert()
     {
         $xml = $this->createXmlFromModel($this);
-
         return $this->connection()->post($this->url(), $xml);
     }
 
@@ -85,12 +83,14 @@ trait Storable
      * @throws ResourceMissingAttributes
      * @throws CouldNotConnectException
      */
-    public function create(array $attributes): Collection
+    public function create(array $attributes)
     {
+        $this->fill($attributes);
         if ($this->validate()) {
-            $this->fill($attributes);
-            $xml = $this->createXmlFromModel($this);
-            return $this->connection()->post($this->url(), $xml);
+            $xml = $this->createXmlFromModel($attributes);
+            if ($this->connection()->post($this->url(), $xml)) {
+                return $this;
+            }
         } else {
             throw new ResourceMissingAttributes($this->getErrors());
         }
@@ -101,7 +101,7 @@ trait Storable
      * @throws CouldNotConnectException
      *
      */
-    public function update(): Collection
+    private function update(): Collection
     {
         $primaryKey = $this->primaryKeyContent();
 

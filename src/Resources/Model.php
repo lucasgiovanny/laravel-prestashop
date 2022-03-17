@@ -77,7 +77,7 @@ abstract class Model implements \JsonSerializable
      * @param $attributes
      * @param  Validator|null  $validator
      */
-    public function __construct(Prestashop $connection =null, $attributes = [], Validator $validator = null)
+    public function __construct(Prestashop $connection = null, $attributes = [], Validator $validator = null)
     {
         //Set connection if there is, otherwise use Facade with default settings
         if (isset($connection)) {
@@ -87,7 +87,25 @@ abstract class Model implements \JsonSerializable
         $this->fill($attributes);
     }
 
+    public function getRules(): array
+    {
+        return static::$rules;
+    }
 
+    public function getMessages(): array
+    {
+        return static::$messages;
+    }
+
+    public function validateAttributes(array $attributes)
+    {
+        $v = $this->validator->make($attributes, static::$rules, static::$messages);
+        if ($v->passes()) {
+            return true;
+        }
+      return $v->messages();
+
+    }
 
     /**
      * Validates current attributes against rules

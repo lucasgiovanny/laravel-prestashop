@@ -263,7 +263,7 @@ class Prestashop
      *
      * @throws CouldNotConnectException
      */
-    public function get($url = null)
+    public function get($url = null): array
     {
         try {
             return $this->call("get", $url);
@@ -273,16 +273,18 @@ class Prestashop
     }
 
     /**
+     * Handle post request
+     * @return boolean
      * @throws CouldNotConnectException
      */
-    public function post($url, $body): \Illuminate\Support\Collection
+    public function post($url, $body)
     {
-        // try {
-        $this->filters = [];
-        return $this->call("post", $url, $body);
-//        } catch (CouldNotConnectException $e) {
-//            throw new CouldNotConnectException($e);
-//        }
+        try {
+            $this->filters = [];
+            return $this->call("post", $url, $body);
+        } catch (CouldNotConnectException|ConfigException|GuzzleException $e) {
+            throw new CouldNotConnectException($e);
+        }
     }
 
     /**
@@ -314,16 +316,22 @@ class Prestashop
      *
      * @param  string  $method
      *
-     *
-     * @throws CouldNotConnectException|ConfigException
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @param  string|null  $url
+     * @param  mixed|null  $body
+     * @return array
+     * @throws ConfigException
+     * @throws CouldNotConnectException
+     * @throws GuzzleException
+     * @throws PrestashopWebserviceException
      */
-    protected function call(string $method, string $url = null, mixed $body = null)
+    protected function call(string $method, string $url = null, mixed $body = null): array
     {
         $this->method = in_array($method, ["get", "post", "put", "delete"]) ? $method : null;
 
         if ($this->canExecute()) {
-            return $this->response($this->exec($url, $body));
+            $result = $this->exec($url, $body);
+            return $this->response($result);
+
         }
         throw new CouldNotConnectException("Error occur when trying to execute the API call");
     }
@@ -337,12 +345,6 @@ class Prestashop
      */
     protected function canExecute(): bool
     {
-
-
-//        if (!$this->resource) {
-//            throw new ConfigException("You need to define a resource.");
-//        }
-
         if (!$this->method) {
             throw new ConfigException("You need to define a method.");
         }
@@ -361,10 +363,10 @@ class Prestashop
     /**
      * Execute the request to Prestashop web service
      *
-     * @param $url
+     * @param  null  $url
+     * @param  mixed|null  $body
      * @return array
-     * @throws CouldNotConnectException
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws GuzzleException
      * @throws PrestashopWebserviceException
      */
     protected function exec($url = null, mixed $body = null)
@@ -375,8 +377,15 @@ class Prestashop
             $url = trim($this->shopUrl(), "/")."/".trim($this->resource, "/");
         }
 
+        $headers = [];
         if ($this->method == "post") {
-            $this->headers = ['Content-Type' => 'text/xml; charset=UTF8'];
+            $headers = [
+                'Content-Type' => 'text/xml; charset=UTF8',
+                'Io-Format' => 'JSON',
+                'Output-Format' => 'JSON'
+            ];
+        } else {
+            $headers = $this->headers;
         }
 
         try {
@@ -386,17 +395,14 @@ class Prestashop
                 [
                     RequestOptions::ALLOW_REDIRECTS,
                     RequestOptions::AUTH => [$this->token(), null],
-                    RequestOptions::HEADERS => $this->headers,
+                    RequestOptions::HEADERS => $headers,
                     RequestOptions::QUERY => $this->query(),
                     'body' => $body
                 ],
             );
-
-            $xml = simplexml_load_string($res->getBody());
-            echo $xml;
             return $res->getBody() ? json_decode($res->getBody(), true) : null;
         } catch (ServerException  $e) {
-            print $body;
+
             $response = $e->getResponse();
             $responseBodyAsString = $response->getBody()->getContents();
             throw new PrestashopWebserviceException($responseBodyAsString);
@@ -565,7 +571,6 @@ class Prestashop
      */
     protected function response(?array $response): array
     {
-
         if (!$response) {
             throw new CouldNotConnectException("No response from server");
         }
@@ -575,25 +580,16 @@ class Prestashop
         if (count($response) >= 2) {
             return $response;
         }
+        if (array_filter(array_keys($response), 'is_string')) {
+            $firstKey = array_key_first($response);
+            return $response[$firstKey];
 
-        return $response[0];
-    }
-
-    protected function parseXML($response)
-    {
-        if ($response != '') {
-            libxml_clear_errors();
-            libxml_use_internal_errors(true);
-            $xml = simplexml_load_string(trim($response->getBody()->getContents()), 'SimpleXMLElement', LIBXML_NOCDATA);
-            if (libxml_get_errors()) {
-                $msg = var_export(libxml_get_errors(), true);
-                libxml_clear_errors();
-                throw new PrestaShopWebserviceException('HTTP XML response is not parsable: '.$msg);
-            }
-            return $xml;
-        } else {
-            throw new PrestaShopWebserviceException('HTTP response is empty');
         }
+        if (is_array($response)) {
+            return $response[0];
+        }
+        return $response;
+
     }
 
     /**
