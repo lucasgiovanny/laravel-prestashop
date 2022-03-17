@@ -6,12 +6,13 @@ use Exception;
 use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\ServerException;
 use GuzzleHttp\RequestOptions;
 use Lucasgiovanny\LaravelPrestashop\Exceptions\ConfigException;
 use Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotConnectException;
 use Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotFindResource;
-use Lucasgiovanny\LaravelPrestashop\Models\Resource;
 use Illuminate\Support\Str;
+use Lucasgiovanny\LaravelPrestashop\Exceptions\PrestashopWebserviceException;
 use Lucasgiovanny\LaravelPrestashop\Resources\Model;
 use SimpleXMLElement;
 
@@ -276,12 +277,12 @@ class Prestashop
      */
     public function post($url, $body): \Illuminate\Support\Collection
     {
-        try {
-            $this->filters = [];
-            return $this->call("post", $url, $body);
-        } catch (Exception|GuzzleException $e) {
-            throw new CouldNotConnectException($e);
-        }
+        // try {
+        $this->filters = [];
+        return $this->call("post", $url, $body);
+//        } catch (CouldNotConnectException $e) {
+//            throw new CouldNotConnectException($e);
+//        }
     }
 
     /**
@@ -364,8 +365,9 @@ class Prestashop
      * @return array
      * @throws CouldNotConnectException
      * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws PrestashopWebserviceException
      */
-    protected function exec($url = null, mixed $body = null): ?array
+    protected function exec($url = null, mixed $body = null)
     {
         if (isset($url)) {
             $url = $this->formatUrl($url);
@@ -374,27 +376,37 @@ class Prestashop
         }
 
         if ($this->method == "post") {
-            $this->headers = [
-                'Content-Type' => 'text/xml; charset=UTF8',
-            ];
+            $this->headers = ['Content-Type' => 'text/xml; charset=UTF8'];
         }
+
         try {
             $res = $this->http->request(
                 strtoupper($this->method),
                 $url,
                 [
+                    RequestOptions::ALLOW_REDIRECTS,
                     RequestOptions::AUTH => [$this->token(), null],
                     RequestOptions::HEADERS => $this->headers,
                     RequestOptions::QUERY => $this->query(),
-                    $body
+                    'body' => $body
                 ],
             );
 
+            $xml = simplexml_load_string($res->getBody());
+            echo $xml;
             return $res->getBody() ? json_decode($res->getBody(), true) : null;
-        } catch (GuzzleException  $e) {
-            throw new CouldNotConnectException($e);
+        } catch (ServerException  $e) {
+            print $body;
+            $response = $e->getResponse();
+            $responseBodyAsString = $response->getBody()->getContents();
+            throw new PrestashopWebserviceException($responseBodyAsString);
+        } catch (ClientException $ce) {
+            $response = $ce->getResponse();
+            $responseBodyAsString = $response->getBody()->getContents();
+            throw new PrestashopWebserviceException($responseBodyAsString, 500, null);
+        } catch (Exception $e) {
+            throw new Exception("A global error which is undefined ?");
         }
-
     }
 
     /**
@@ -553,6 +565,7 @@ class Prestashop
      */
     protected function response(?array $response): array
     {
+
         if (!$response) {
             throw new CouldNotConnectException("No response from server");
         }
@@ -564,6 +577,23 @@ class Prestashop
         }
 
         return $response[0];
+    }
+
+    protected function parseXML($response)
+    {
+        if ($response != '') {
+            libxml_clear_errors();
+            libxml_use_internal_errors(true);
+            $xml = simplexml_load_string(trim($response->getBody()->getContents()), 'SimpleXMLElement', LIBXML_NOCDATA);
+            if (libxml_get_errors()) {
+                $msg = var_export(libxml_get_errors(), true);
+                libxml_clear_errors();
+                throw new PrestaShopWebserviceException('HTTP XML response is not parsable: '.$msg);
+            }
+            return $xml;
+        } else {
+            throw new PrestaShopWebserviceException('HTTP response is empty');
+        }
     }
 
     /**

@@ -8,9 +8,9 @@ use Illuminate\Support\Collection;
 use Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotConnectException;
 use Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotPost;
 use Lucasgiovanny\LaravelPrestashop\Exceptions\ResourceMissingAttributes;
-use Lucasgiovanny\LaravelPrestashop\Exceptions\ResourceNotValidated;
 use Lucasgiovanny\LaravelPrestashop\Prestashop;
 use Lucasgiovanny\LaravelPrestashop\Resources\Model;
+use Lucasgiovanny\LaravelPrestashop\SimpleXMLExtended;
 use SimpleXMLElement;
 
 trait Storable
@@ -55,20 +55,18 @@ trait Storable
      * @throws ResourceMissingAttributes
      *
      */
-    public function save(array $options = []): static
+    public function save(array $options = [])
     {
         if ($this->validate()) {
             if ($this->exists()) {
                 $this->fill((array)$this->update());
             } else {
-
                 $this->fill((array)$this->insert());
             }
+            return $this;
         } else {
             throw new ResourceMissingAttributes($this->getErrors());
         }
-
-        return $this;
     }
 
     /**
@@ -76,7 +74,7 @@ trait Storable
      * @throws CouldNotConnectException
      *
      */
-    public function insert(): Collection
+    public function insert()
     {
         $xml = $this->createXmlFromModel($this);
 
@@ -138,7 +136,8 @@ trait Storable
                 $subnode = $xml_data->addChild($key);
                 $this->parseArrayToXml($value, $subnode);
             } else {
-                $xml_data->addChild("$key", htmlspecialchars("$value"));
+                $xml_data->addChild("$key");
+                $xml_data->$key->addCData($value);
             }
         }
         return $xml_data;
@@ -153,13 +152,16 @@ trait Storable
     {
 
         if ($model instanceof Model) {
-            $subModule = $model->url;
-            $xml_data = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><prestashop xmlns:xlink="http://www.w3.org/1999/xlink"/>');
+            $subModule = $model->xml_header;
+            $xml_data = new SimpleXMLExtended('<prestashop xmlns:xlink="http://www.w3.org/1999/xlink"/>');
 
             //Get all fillables and fill array values with null, To later compine these
             $values = array_fill(0, count($model->getFillable()), null);
             $keys = array_combine($model->getFillable(), $values);
-            $array[$subModule] = array_merge($keys,$model->attributes());
+            $atributes = array_merge($keys, $model->attributes());
+            unset($atributes["id"]);
+
+            $array[$subModule] = $atributes;
             $this->parseArrayToXml($array, $xml_data);
             return $xml_data->asXML();
         }

@@ -5,18 +5,34 @@ namespace Lucasgiovanny\LaravelPrestashop\Resources;
 use Lucasgiovanny\LaravelPrestashop\Query;
 use Lucasgiovanny\LaravelPrestashop\Persistance;
 use Lucasgiovanny\LaravelPrestashop\Resources\Model;
+
 class Addresses extends Model
 {
     use Query\Findable;
     use Persistance\Storable;
 
+    protected static $rules = [
+        'id_customer' => 'nullable|numeric',
+        'id_country' => 'required|numeric',
+        'alias' => 'required|string',
+        'firstname'=> 'required|string',
+        'lastname'=> 'required|string',
+        'address1'=> 'required|string',
+    ];
+
+    //Use this for custom messages
+    protected static $messages = [
+        'id_customer.numeric' => 'Customer must be numeric',
+        'id_country.required' => 'Country is required',
+        'alias.required' => 'Alias is required',
+    ];
     protected $fillable = [
         'id',
         'id_customer',
+        'id_country',
         'id_manufacturer',
         'id_supplier',
         'id_warehouse',
-        'id_country',
         'id_state',
         'alias',
         'company',
@@ -35,5 +51,6 @@ class Addresses extends Model
         'date_add',
         'date_upd',
     ];
+    protected $xml_header = "address";
     protected $url = 'addresses';
 }
