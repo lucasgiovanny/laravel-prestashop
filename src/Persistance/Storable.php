@@ -63,6 +63,7 @@ trait Storable
             } else {
                 $this->fill($this->insert());
             }
+
             return $this;
         } else {
             throw new ResourceMissingAttributes($this->getErrors());
