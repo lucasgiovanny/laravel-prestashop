@@ -94,19 +94,20 @@ trait Storable
         } else {
             throw new ResourceMissingAttributes($this->getErrors());
         }
+        return null;
     }
 
     /**
-     * @return Collection
+     * @return array|bool|Collection|null
      * @throws CouldNotConnectException
      *
      */
-    private function update(): Collection
+    private function update(): array
     {
         $primaryKey = $this->primaryKeyContent();
-
         return $this->connection()->put($this->url()."/".$primaryKey,
             $this->createXmlFromModel($this));
+
     }
 
     /**
@@ -114,10 +115,11 @@ trait Storable
      * @throws CouldNotConnectException
      *
      */
-    public function delete(): ?Collection
+    public function delete()
     {
         $primaryKey = $this->primaryKeyContent();
-        return $this->connection()->destroy($this->url().'/'.$primaryKey);
+        $this->connection()->destroy($this->url(),$primaryKey);
+
     }
 
     /**
@@ -159,7 +161,10 @@ trait Storable
             $values = array_fill(0, count($model->getFillable()), null);
             $keys = array_combine($model->getFillable(), $values);
             $atributes = array_merge($keys, $model->attributes());
-            unset($atributes["id"]);
+            if (isset($model->attributes()['id']) && $model->attributes()['id'] == null) {
+                unset($atributes["id"]);
+            }
+
 
             $array[$subModule] = $atributes;
             $this->parseArrayToXml($array, $xml_data);
