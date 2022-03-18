@@ -136,7 +136,7 @@ trait Findable
      */
     public function where(string $field, string $operatorOrValue, array|string $value = null): static
     {
-       $this->connection()->filter($field, $operatorOrValue, $value);
+        $this->connection()->filter($field, $operatorOrValue, $value);
         return $this;
     }
 
@@ -149,9 +149,9 @@ trait Findable
     public function first(): static
     {
         $get = $this->connection()->get($this->url());
-        if(array_keys($get) == 0){
+        if (array_keys($get) == 0) {
             $response = $get[0];
-        }else{
+        } else {
             $response = $get;
         }
         return new static($this->connection(), $response);
@@ -179,13 +179,8 @@ trait Findable
             ],
         ];
 
-        $get = null;
-        try {
-            $get = $this->connection()->get($this->url());
-        } catch (GuzzleException|ConfigException|CouldNotConnectException $e) {
-            throw new $e($e);
-        }
-        $r = $get ?? [];
+
+        $r = $this->connection()->get($this->url());
         return new static($this->connection(), $r);
     }
 

@@ -268,7 +268,7 @@ class Prestashop
         try {
             return $this->call("get", $url);
         } catch (Exception|GuzzleException $e) {
-            throw new CouldNotConnectException($e);
+            throw new CouldNotConnectException($e->getMessage());
         }
     }
 
@@ -282,7 +282,7 @@ class Prestashop
             $this->filters = [];
             return $this->call("post", $url, $body);
         } catch (CouldNotConnectException|ConfigException|GuzzleException $e) {
-            throw new CouldNotConnectException($e);
+            throw new CouldNotConnectException($e->getMessage());
         }
     }
 
@@ -294,7 +294,7 @@ class Prestashop
         try {
             return $this->call("put", $url, $body);
         } catch (Exception|GuzzleException $e) {
-            throw new CouldNotConnectException($e);
+            throw new CouldNotConnectException($e->getMessage());
         }
     }
 
@@ -304,7 +304,7 @@ class Prestashop
     public function destroy($url, $id)
     {
         try {
-            return $this->call("delete", $url,['id'=>$id]);
+            return $this->call("delete", $url, ['id' => $id]);
         } catch (GuzzleException|ConfigException|CouldNotConnectException|PrestashopWebserviceException $e) {
             throw new PrestashopWebserviceException($e->getMessage());
         }
@@ -385,10 +385,10 @@ class Prestashop
         } else {
             $headers = $this->headers;
         }
-        if($this->method == "delete"){
-            $query = ['id'=> "[".$body['id']."]"];
+        if ($this->method == "delete") {
+            $query = ['id' => "[".$body['id']."]"];
             $body = null; //reset body
-        }else{
+        } else {
             $query = $this->query();
         }
 
@@ -568,21 +568,19 @@ class Prestashop
      */
     protected function response(?array $response): array
     {
-        if (!$response) {
-            throw new CouldNotConnectException("No response from server");
-        }
-
         $response = $response[$this->resource] ?? $response;
+
 
         if (count($response) >= 2) {
             return $response;
         }
         if (array_filter(array_keys($response), 'is_string')) {
             $firstKey = array_key_first($response);
+
             return $response[$firstKey];
 
         }
-        if (is_array($response)) {
+        if (count($response) == 1) {
             return $response[0];
         }
         return $response;

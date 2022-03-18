@@ -50,6 +50,7 @@ class Orders extends Model
         'total_products_wt.required' => 'Total products wt is required',
     ];
     protected $fillable = [
+        'id',
         'id_address_delivery',
         'id_address_invoice',
         'id_cart',
