@@ -3,7 +3,6 @@
 namespace Lucasgiovanny\LaravelPrestashop\Exceptions;
 
 use Exception;
-use SimpleXMLElement;
 use Throwable;
 
 class PrestashopWebserviceException extends Exception

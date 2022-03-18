@@ -274,7 +274,6 @@ class Prestashop
 
     /**
      * Handle post request
-     * @return boolean
      * @throws CouldNotConnectException
      */
     public function post($url, $body)
@@ -290,7 +289,7 @@ class Prestashop
     /**
      * @throws CouldNotConnectException
      */
-    public function put($url, $body): \Illuminate\Support\Collection
+    public function put($url, $body)
     {
         try {
             return $this->call("put", $url, $body);
@@ -302,12 +301,12 @@ class Prestashop
     /**
      * @throws CouldNotConnectException
      */
-    public function destroy($url): ?\Illuminate\Support\Collection
+    public function destroy($url, $id)
     {
         try {
-            return $this->call("DELETE", $url);
-        } catch (Exception|GuzzleException $e) {
-            throw new CouldNotConnectException($e);
+            return $this->call("delete", $url,['id'=>$id]);
+        } catch (GuzzleException|ConfigException|CouldNotConnectException|PrestashopWebserviceException $e) {
+            throw new PrestashopWebserviceException($e->getMessage());
         }
     }
 
@@ -331,7 +330,6 @@ class Prestashop
         if ($this->canExecute()) {
             $result = $this->exec($url, $body);
             return $this->response($result);
-
         }
         throw new CouldNotConnectException("Error occur when trying to execute the API call");
     }
@@ -368,6 +366,7 @@ class Prestashop
      * @return array
      * @throws GuzzleException
      * @throws PrestashopWebserviceException
+     * @throws Exception
      */
     protected function exec($url = null, mixed $body = null)
     {
@@ -377,7 +376,6 @@ class Prestashop
             $url = trim($this->shopUrl(), "/")."/".trim($this->resource, "/");
         }
 
-        $headers = [];
         if ($this->method == "post") {
             $headers = [
                 'Content-Type' => 'text/xml; charset=UTF8',
@@ -386,6 +384,12 @@ class Prestashop
             ];
         } else {
             $headers = $this->headers;
+        }
+        if($this->method == "delete"){
+            $query = ['id'=> "[".$body['id']."]"];
+            $body = null; //reset body
+        }else{
+            $query = $this->query();
         }
 
         try {
@@ -396,20 +400,15 @@ class Prestashop
                     RequestOptions::ALLOW_REDIRECTS,
                     RequestOptions::AUTH => [$this->token(), null],
                     RequestOptions::HEADERS => $headers,
-                    RequestOptions::QUERY => $this->query(),
+                    RequestOptions::QUERY => $query,
                     'body' => $body
                 ],
             );
             return $res->getBody() ? json_decode($res->getBody(), true) : null;
-        } catch (ServerException  $e) {
-
+        } catch (ServerException|ClientException  $e) {
             $response = $e->getResponse();
             $responseBodyAsString = $response->getBody()->getContents();
-            throw new PrestashopWebserviceException($responseBodyAsString);
-        } catch (ClientException $ce) {
-            $response = $ce->getResponse();
-            $responseBodyAsString = $response->getBody()->getContents();
-            throw new PrestashopWebserviceException($responseBodyAsString, 500, null);
+            throw new PrestashopWebserviceException($responseBodyAsString, $e->getCode());
         } catch (Exception $e) {
             throw new Exception("A global error which is undefined ?");
         }
@@ -450,13 +449,11 @@ class Prestashop
     protected function query(): array
     {
         $query = [];
-        if ($this->method != "post") {
-            $query = [
-                'display' => $this->display ?
-                    "[".implode(",", $this->display)."]" : 'full',
-            ];
-        }
 
+        $query = [
+            'display' => $this->display ?
+                "[".implode(",", $this->display)."]" : 'full',
+        ];
 
         if ($this->limit) {
             $query['limit'] = is_array($this->limit) ?

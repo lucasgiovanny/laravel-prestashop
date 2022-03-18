@@ -15,9 +15,11 @@ class Addresses extends Model
         'id_customer' => 'nullable|numeric',
         'id_country' => 'required|numeric',
         'alias' => 'required|string',
-        'firstname'=> 'required|string',
-        'lastname'=> 'required|string',
-        'address1'=> 'required|string',
+        'firstname' => 'required|string',
+        'lastname' => 'required|string',
+        'address1' => 'required|string',
+        'city' => 'required|regex:/^[^!<>;?=+@#"°{}_$%]*$/u',
+        'postcode' => 'required|regex:/^[a-zA-Z 0-9-]+$/',
     ];
 
     //Use this for custom messages
