@@ -5,6 +5,7 @@ namespace Lucasgiovanny\LaravelPrestashop\Persistance;
 
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotConnectException;
 use Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotPost;
 use Lucasgiovanny\LaravelPrestashop\Exceptions\ResourceMissingAttributes;
@@ -119,7 +120,7 @@ trait Storable
     public function delete()
     {
         $primaryKey = $this->primaryKeyContent();
-        $this->connection()->destroy($this->url(),$primaryKey);
+        $this->connection()->destroy($this->url(), $primaryKey);
 
     }
 
@@ -133,9 +134,11 @@ trait Storable
     {
         foreach ($data as $key => $value) {
             if (is_array($value)) {
-//                if (!is_numeric($key)) {
-//                  //  $key = 'item'.$key; //dealing with <0/>..<n/> issues
-//                }
+
+                if (preg_match('~[0-9]+~', $key)) {
+                    $new_key = preg_replace("~[0-9]+~", "", $key);
+                    $key = $new_key;
+                }
                 $subnode = $xml_data->addChild($key);
                 $this->parseArrayToXml($value, $subnode);
             } else {
@@ -162,14 +165,16 @@ trait Storable
             $values = array_fill(0, count($model->getFillable()), null);
             $keys = array_combine($model->getFillable(), $values);
             $atributes = array_merge($keys, $model->attributes());
-            if (isset($model->attributes()['id']) && $model->attributes()['id'] == null) {
+            if (isset($model->attributes()['id']) && $model->attributes()['id'] != null) {
+            } else {
                 unset($atributes["id"]);
             }
 
 
             $array[$subModule] = $atributes;
             $this->parseArrayToXml($array, $xml_data);
-            return $xml_data->asXML();
+            print_r($xml_data->asXML());
+            //return $xml_data->asXML();
         }
         return null;
     }

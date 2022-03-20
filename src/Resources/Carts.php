@@ -1,13 +1,46 @@
 <?php
 
 namespace Lucasgiovanny\LaravelPrestashop\Resources;
+
 use Lucasgiovanny\LaravelPrestashop\Query;
 use Lucasgiovanny\LaravelPrestashop\Persistance;
 use Lucasgiovanny\LaravelPrestashop\Resources\Model;
+
 class Carts extends Model
 {
     use Query\Findable;
     use Persistance\Storable;
+
+    protected static $rules = [
+
+        'id_currency' => 'required|numeric',
+        'id_lang' => 'required|numeric',
+        'id_address_delivery' => 'nullable|numeric',
+        'id_address_invoice' => 'nullable|numeric',
+        'id_customer' => 'nullable|numeric',
+        'id_guest' => 'nullable|numeric',
+        'id_shop_group' => 'nullable|numeric',
+        'id_shop' => 'nullable|nullable',
+        'id_carrier' => 'nullable|nullable',
+        'gift_message' => "nullable|string",
+        'associations.cart_rows' => 'array',
+        'associations.cart_rows.*.id_product' => 'required|numeric',
+        'associations.cart_rows.*.id_product_attribute' => 'nullable|numeric',
+        'associations.cart_rows.*.id_address_delivery' => 'required|numeric',
+        'associations.cart_rows.*.id_customization' => 'nullable|numeric',
+        'associations.cart_rows.*.quantity' => 'required|numeric',
+    ];
+
+    //Use this for custom messages
+    protected static $messages = [
+        'id_currency.numeric' => 'Currency must be numeric',
+        'id_currency.required' => 'Currency is required',
+        'id_lang.required' => 'Lang is required',
+        'associations.required' => 'associations is required',
+        'associations.array' => 'associations must be an array',
+        'associations.cart_rows.required' => 'cart_rows is required',
+        'associations.cart_rows.array' => 'cart_rows must be an array',
+    ];
 
     protected $fillable = [
         'id',
@@ -29,9 +62,26 @@ class Carts extends Model
         'allow_seperated_package',
         'date_add',
         'date_upd',
-        'associations.cart_rows',
+        'associations',
     ];
-   protected $casts = [
-        'associations' => CartRows::class,
+
+    protected $attributes = [
+        'associations' => []
     ];
+
+    public function setAssociationsAttribute($associations)
+    {
+        if (isset($associations['cart_rows'])) {
+            $array = [];
+            foreach ($associations['cart_rows'] as $k => $association) {
+                $array['cart_row'.$k] = $association;
+            }
+             $this->attributes['associations'] = $array;
+        } else {
+            $this->attributes['associations'] = $associations;
+        }
+    }
+
+    protected $xml_header = "cart";
+    protected $url = 'carts';
 }
