@@ -112,7 +112,7 @@ class Orders extends Model
             foreach ($associations['order_rows'] as $k => $association) {
                 $array['order_row'.$k] = $association;
             }
-            $this->attributes['associations'] = $array;
+            $this->attributes['associations']['order_rows'] = $array;
         } else {
             $this->attributes['associations'] = $associations;
         }

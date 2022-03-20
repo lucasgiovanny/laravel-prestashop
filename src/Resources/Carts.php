@@ -76,7 +76,7 @@ class Carts extends Model
             foreach ($associations['cart_rows'] as $k => $association) {
                 $array['cart_row'.$k] = $association;
             }
-             $this->attributes['associations'] = $array;
+             $this->attributes['associations']['cart_rows'] = $array;
         } else {
             $this->attributes['associations'] = $associations;
         }
