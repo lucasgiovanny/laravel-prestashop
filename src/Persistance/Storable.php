@@ -165,6 +165,7 @@ trait Storable
             $values = array_fill(0, count($model->getFillable()), null);
             $keys = array_combine($model->getFillable(), $values);
             $atributes = array_merge($keys, $model->attributes());
+
             if (isset($model->attributes()['id']) && $model->attributes()['id'] != null) {
             } else {
                 unset($atributes["id"]);
@@ -173,8 +174,8 @@ trait Storable
 
             $array[$subModule] = $atributes;
             $this->parseArrayToXml($array, $xml_data);
-            print_r($xml_data->asXML());
-            //return $xml_data->asXML();
+            //print_r($xml_data->asXML());
+            return $xml_data->asXML();
         }
         return null;
     }
