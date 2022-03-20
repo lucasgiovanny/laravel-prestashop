@@ -570,7 +570,6 @@ class Prestashop
     {
         $response = $response[$this->resource] ?? $response;
 
-
         if (count($response) >= 2) {
             return $response;
         }

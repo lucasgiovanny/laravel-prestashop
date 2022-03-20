@@ -87,5 +87,6 @@ class Products extends Model
         'associations',
 
     ];
+    protected $xml_header = "product";
     protected $url = 'products';
 }
