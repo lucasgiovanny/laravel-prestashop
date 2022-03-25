@@ -603,7 +603,7 @@ class Prestashop
             //@todo return Model instance
             $this->resource = $method;
 
-            $class = "\Lucasgiovanny\LaravelPrestashop\Resources\\".$method;
+            $class = "\Lucasgiovanny\LaravelPrestashop\Resources\\".ucfirst($method);
             return new $class($this, $arguments);
 
         }
