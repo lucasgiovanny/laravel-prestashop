@@ -174,7 +174,6 @@ trait Storable
 
             $array[$subModule] = $atributes;
             $this->parseArrayToXml($array, $xml_data);
-            //print_r($xml_data->asXML());
             return $xml_data->asXML();
         }
         return null;

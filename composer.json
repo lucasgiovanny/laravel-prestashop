@@ -3,6 +3,7 @@
     "description": "Package for use PrestaShop Webservice on Laravel.",
     "keywords": [
         "lucasgiovanny",
+        "pdik",
         "laravel",
         "laravel-prestashop"
     ],
@@ -13,10 +14,15 @@
             "name": "Lucas Giovanny",
             "email": "lucasgiovanny@gmail.com",
             "role": "Developer"
+        },
+        {
+            "name": "Pepijn dik",
+            "email": "pepijn@pdik.nl",
+            "role": "Developer"
         }
     ],
     "require": {
-        "php": "^7.4|8.0",
+        "php": "^7.4",
         "guzzlehttp/guzzle": "^7.0.1",
         "illuminate/contracts": "^8.37|^9.0",
         "spatie/laravel-package-tools": "^1.4.3",

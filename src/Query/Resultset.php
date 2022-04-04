@@ -55,7 +55,6 @@ class Resultset
         foreach ($result as $r) {
             $collection[] = new $class($this->connection, $r);
         }
-        dd($collection);
         return collect($collection);
     }
 
