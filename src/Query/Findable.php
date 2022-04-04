@@ -33,7 +33,7 @@ trait Findable
      * @param  string  $order
      * @return $this
      */
-    protected function sort(string $field, string $order): static
+    protected function sort(string $field, string $order)
     {
         $this->connection()->sort[] = [
             'value' => $field,
@@ -49,7 +49,7 @@ trait Findable
      *
      * @return $this
      */
-    public function sortBy(string $field): static
+    public function sortBy(string $field)
     {
         $this->sort($field, "ASC");
 
@@ -63,7 +63,7 @@ trait Findable
      *
      * @return $this
      */
-    public function sortByDesc(string $field): static
+    public function sortByDesc(string $field)
     {
         $this->sort($field, "DESC");
 
@@ -77,7 +77,7 @@ trait Findable
      *
      * @return $this
      */
-    public function orderBy(string $field): static
+    public function orderBy(string $field)
     {
         $this->sort($field, "ASC");
 
@@ -91,7 +91,7 @@ trait Findable
      *
      * @return $this
      */
-    public function orderByDesc(string $field): static
+    public function orderByDesc(string $field)
     {
         $this->sort($field, "DESC");
 
@@ -105,7 +105,7 @@ trait Findable
      *
      * @return $this
      */
-    public function select($fields): static
+    public function select($fields)
     {
         return $this->display($fields);
     }
@@ -117,7 +117,7 @@ trait Findable
      *
      * @return $this
      */
-    public function display(array|string $fields): static
+    public function display($fields)
     {
         $this->connection()->display = is_array($fields) ? $fields : [$fields];
 
@@ -134,7 +134,7 @@ trait Findable
      * @return $this
      * @throws Exception
      */
-    public function where(string $field, string $operatorOrValue, array|string $value = null): static
+    public function where(string $field, string $operatorOrValue, $value = null)
     {
         $this->connection()->filter($field, $operatorOrValue, $value);
         return $this;
@@ -146,7 +146,7 @@ trait Findable
      * @return Findable
      * @throws CouldNotConnectException
      */
-    public function first(): static
+    public function first()
     {
         $get = $this->connection()->get($this->url());
         if (array_keys($get) == 0) {
@@ -165,7 +165,7 @@ trait Findable
      * @throws CouldNotFindFilter
      * @throws CouldNotConnectException
      */
-    public function find(int $id): static
+    public function find(int $id)
     {
         if ($this->connection()->filters) {
             throw new CouldNotFindFilter("You can not use find method along with filters");
@@ -188,7 +188,7 @@ trait Findable
      * Add a filter to query
      * @throws Exception
      */
-    public function filter(string $field, string $operatorOrValue, $value = null): static
+    public function filter(string $field, string $operatorOrValue, $value = null)
     {
         $this->connection()->filter($field, $operatorOrValue, $value);
         return $this;
