@@ -214,9 +214,7 @@ trait Findable
 
     /**
      * get Resources
-     * @throws ConfigException
      * @throws CouldNotConnectException
-     * @throws GuzzleException
      */
     public function get(array $params = []): array
     {

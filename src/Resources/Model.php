@@ -208,6 +208,7 @@ abstract class Model implements \JsonSerializable
      */
     protected function fill(array $attributes)
     {
+
         foreach ($this->fillableFromArray($attributes) as $key => $value) {
             if ($this->isFillable($key)) {
                 $this->setAttribute($key, $value);
@@ -231,6 +232,9 @@ abstract class Model implements \JsonSerializable
         return $attributes;
     }
 
+    protected function addFillable($key){
+        $this->fillable[] = $key;
+    }
     protected function isFillable($key)
     {
         return in_array($key, $this->fillable);
