@@ -10,6 +10,7 @@ use GuzzleHttp\Exception\ServerException;
 use GuzzleHttp\RequestOptions;
 use Lucasgiovanny\LaravelPrestashop\Exceptions\ConfigException;
 use Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotConnectException;
+use Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotFindFilter;
 use Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotFindResource;
 use Illuminate\Support\Str;
 use Lucasgiovanny\LaravelPrestashop\Exceptions\PrestashopWebserviceException;
@@ -105,6 +106,7 @@ class Prestashop
         'BEGIN',
         'END',
         'CONTAINS',
+        'INNER'
     ];
 
     /**
@@ -404,6 +406,7 @@ class Prestashop
                     'body' => $body
                 ],
             );
+
             return $res->getBody() ? json_decode($res->getBody(), true) : null;
         } catch (ServerException|ClientException  $e) {
             $response = $e->getResponse();
@@ -414,6 +417,9 @@ class Prestashop
         }
     }
 
+    public function innerFilter($filter){
+
+    }
     /**
      * Add a filter to the web service call
      *
@@ -424,13 +430,12 @@ class Prestashop
      * @return $this
      * @throws Exception
      */
-
     public function filter(string $field, string $operatorOrValue, $value = null): Prestashop
     {
         $operator = $value ? $operatorOrValue : '=';
 
         if (!in_array(strtoupper($operator), Prestashop::FILTER_OPERATORS)) {
-            throw new Exception('Invalid filter operator');
+            throw new CouldNotFindFilter('Invalid filter operator');
         }
 
         $this->filters[] = [
@@ -464,6 +469,7 @@ class Prestashop
         if ($this->filters) {
             foreach ($this->filters as $filter) {
                 if (isset($filter['operator'])) {
+                    $value = null;
                     if ($filter['operator'] === "|" || $filter['operator'] === "OR") {
                         $value = "[".implode("|", $filter['value'])."]";
                     }
@@ -487,8 +493,15 @@ class Prestashop
                     if ($filter['operator'] === "CONTAINS") {
                         $value = "%[".$filter['value']."]%";
                     }
-                    $query["filter[".$filter['field']."]"] = $value;
+
+                    if($filter['operator'] === "INNER") {
+                          $query[$filter['field']] = $filter['value'];
+                    }
+                    if(isset($value)){
+                          $query["filter[".$filter['field']."]"] = $value;
+                    }
                 }
+
                 if (isset($filter['schema'])) {
                     $query = []; // clear because we wanted only a blank schema!
                     $query["schema"] = $filter['schema'];
