@@ -4,9 +4,18 @@ namespace Lucasgiovanny\LaravelPrestashop;
 
 use Exception;
 use GuzzleHttp\Client as HttpClient;
+use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\ServerException;
 use GuzzleHttp\RequestOptions;
-use Lucasgiovanny\LaravelPrestashop\Models\Resource;
+use Lucasgiovanny\LaravelPrestashop\Exceptions\ConfigException;
+use Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotConnectException;
+use Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotFindFilter;
+use Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotFindResource;
 use Illuminate\Support\Str;
+use Lucasgiovanny\LaravelPrestashop\Exceptions\PrestashopWebserviceException;
+use Lucasgiovanny\LaravelPrestashop\Resources\Model;
+use SimpleXMLElement;
 
 class Prestashop
 {
@@ -54,7 +63,8 @@ class Prestashop
         'product_option_values',
         'product_options',
         'product_suppliers',
-        'products', 'search',
+        'products',
+        'search',
         'shop_groups',
         'shop_urls',
         'shops',
@@ -96,6 +106,7 @@ class Prestashop
         'BEGIN',
         'END',
         'CONTAINS',
+        'INNER'
     ];
 
     /**
@@ -103,89 +114,99 @@ class Prestashop
      *
      * @var string
      */
-    public $resource;
+    protected ?string $resource = null;
 
     /**
      * Field from the resource to be added to the request
      *
      * @var array
      */
-    public $display;
+    protected array $display = [];
 
     /**
      * Filters to be added to the request
      *
      * @var array
      */
-    public $filters;
+    public array $filters = [];
+
 
     /**
      * Define the limit for the request
      *
      * @var array|int
      */
-    public $limit;
+    protected $limit;
 
     /**
      * Define the sort fields for the request
      *
      * @var array
      */
-    public $sort;
+    protected array $sort = [];
 
     /**
      * On-demand endpoint definition
      *
      * @var string
      */
-    public $endpoint;
+    protected string $endpoint = "/api";
+    protected ?string $shop_url = null;
 
     /**
      * On-demand token definition
      *
      * @var string
      */
-    public $token;
+    public ?string $token = null;
 
     /**
      * Shop ID
      *
      * @var string
      */
-    public $shop;
+    public ?string $shop = null;
 
     /**
      * Headers for request
      *
      * @var array
      */
-    protected $headers = [
+    protected array $headers = [
         'Io-Format' => 'JSON',
         'Output-Format' => 'JSON',
     ];
+    protected HttpClient $http;
+    private ?string $method;
 
     /**
      * Construct the class with dependencies
      *
-     * @param HttpClient $http
+     * @param  HttpClient  $http
      *
      * @return void
      */
-    public function __construct(protected HttpClient $http)
+    public function __construct(HttpClient $http = null)
     {
+        if ($http) {
+            $this->http = $http;
+        } else {
+            $this->http = new HttpClient();
+        }
     }
 
     /**
      * Configure the Prestashop store
      *
-     * @param string $endpoint
-     * @param string $token
-     * @param int    $shop
+     * @param  string  $endpoint
+     * @param  string  $token
+     * @param  int  $shop
      *
      * @return $this
      */
-    public function shop(string $endpoint, string $token, int $shop = null)
+    public function shop(string $shop_url, string $endpoint, string $token, int $shop = null): Prestashop
     {
+        $this->shop_url = $shop_url;
         $this->endpoint = $endpoint;
         $this->token = $token;
         $this->shop = $shop;
@@ -196,28 +217,27 @@ class Prestashop
     /**
      * Configure the Prestashop store
      *
-     * @param string $endpoint
-     * @param string $token
-     * @param int    $shop
+     * @param  string  $endpoint
+     * @param  string  $token
+     * @param  int  $shop
      *
      * @return $this
      */
-    public function store(string $endpoint, string $token, int $shop = null)
+    public function store(string $shop_url, string $endpoint, string $token, int $shop = null): Prestashop
     {
-        $this->shop($endpoint, $token, $shop);
-
+        $this->shop($shop_url, $endpoint, $token, $shop);
         return $this;
     }
 
     /**
      * Set the resource to be used
      *
-     * @param string $resource
-     * @param mixed  ...$arguments
+     * @param  string  $resource
+     * @param  mixed  ...$arguments
      *
      * @return $this
      */
-    public function resource(string $resource, ...$arguments)
+    public function resource(string $resource, ...$arguments): Prestashop
     {
         $this->resource = $resource;
 
@@ -227,224 +247,93 @@ class Prestashop
     /**
      * Define the request limit or index and limit
      *
-     * @param int $limit
-     * @param int $index
+     * @param  int  $limit
+     * @param  int  $index
      *
      * @return $this
      */
-    public function limit(int $limit, int $index = null)
+    public function limit(int $limit, int $index = null): Prestashop
     {
         $this->limit = $index ? [$index, $limit] : $limit;
 
         return $this;
     }
 
-    /**
-     * Add sort fields by ASC
-     *
-     * @param string $field
-     * @param string $order
-     *
-     * @return $this
-     */
-    protected function sort(string $field, string $order)
-    {
-        $this->sort[] = [
-            'value' => $field,
-            'order' => $order,
-        ];
-
-        return $this;
-    }
-
-    /**
-     * Add sort fields by DESC
-     *
-     * @param string $field
-     *
-     * @return $this
-     */
-    public function sortBy(string $field)
-    {
-        $this->sort($field, "ASC");
-
-        return $this;
-    }
-
-    /**
-     * Add sort fields by DESC
-     *
-     * @param string $field
-     *
-     * @return $this
-     */
-    public function sortByDesc(string $field)
-    {
-        $this->sort($field, "DESC");
-
-        return $this;
-    }
-
-    /**
-     * Alias for sortBy
-     *
-     * @param string $field
-     *
-     * @return $this
-     */
-    public function orderBy(string $field)
-    {
-        $this->sort($field, "ASC");
-
-        return $this;
-    }
-
-    /**
-     * Alias for sortByDesc
-     *
-     * @param string $field
-     *
-     * @return $this
-     */
-    public function orderByDesc(string $field)
-    {
-        $this->sort($field, "DESC");
-
-        return $this;
-    }
-
-    /**
-     * Shortcut for display method
-     *
-     * @param string|array $fields
-     *
-     * @return $this
-     */
-    public function select($fields)
-    {
-        return $this->display($fields);
-    }
-
-    /**
-     * Select fields to be returned by web service
-     *
-     * @param string|array $fields
-     *
-     * @return $this
-     */
-    public function display($fields)
-    {
-        $this->display = is_array($fields) ? $fields : [$fields];
-
-        return $this;
-    }
-
-    /**
-     * Add a filter to the web service call
-     *
-     * @param string       $field
-     * @param string       $operatorOrValue
-     * @param string|array $value
-     *
-     * @return $this
-     */
-    public function filter(string $field, string $operatorOrValue, $value = null)
-    {
-        $operator = $value ? $operatorOrValue : '=';
-
-        if (! in_array(strtoupper($operator), self::FILTER_OPERATORS)) {
-            throw new Exception('Invalid filter operator');
-        }
-
-        $this->filters[] = [
-            'field' => $field,
-            'operator' => strtoupper($operator),
-            'value' => $value ?: $operatorOrValue,
-        ];
-
-        return $this;
-    }
-
-    /**
-     * Shortcut to filter method
-     *
-     * @param string       $field
-     * @param string       $operatorOrValue
-     * @param string|array $value
-     *
-     * @return $this
-     */
-    public function where(string $field, string $operatorOrValue, $value = null)
-    {
-        return $this->filter($field, $operatorOrValue, $value);
-    }
 
     /**
      * Execute the get request
      *
-     * @return \Illuminate\Support\Collection
+     * @throws CouldNotConnectException
      */
-    public function get()
+    public function get($url = null): array
     {
-        return $this->call("get");
-    }
-
-    /**
-     * Execute the get request and return first result
-     *
-     * @return \Illuminate\Support\Collection|null
-     */
-    public function first()
-    {
-        $get = $this->call("get");
-
-        return $get->isNotEmpty() ? $get->first() : null;
-    }
-
-    /**
-     * Execute the get request with the condition applied
-     *
-     * @param int $id
-     *
-     * @return \Illuminate\Support\Collection|null
-     */
-    public function find(int $id)
-    {
-        if ($this->filters) {
-            throw new Exception("You can not use find method along with filters");
+        try {
+            return $this->call("get", $url);
+        } catch (Exception|GuzzleException $e) {
+            throw new CouldNotConnectException($e->getMessage());
         }
+    }
 
-        $this->filters = [
-            [
-                'field' => 'id',
-                'operator' => '=',
-                'value' => $id,
-            ],
-        ];
+    /**
+     * Handle post request
+     * @throws CouldNotConnectException
+     */
+    public function post($url, $body)
+    {
+        try {
+            $this->filters = [];
+            return $this->call("post", $url, $body);
+        } catch (CouldNotConnectException|ConfigException|GuzzleException $e) {
+            throw new CouldNotConnectException($e->getMessage());
+        }
+    }
 
-        $get = $this->call("get");
+    /**
+     * @throws CouldNotConnectException
+     */
+    public function put($url, $body)
+    {
+        try {
+            return $this->call("put", $url, $body);
+        } catch (Exception|GuzzleException $e) {
+            throw new CouldNotConnectException($e->getMessage());
+        }
+    }
 
-        return $get->isNotEmpty() ? $get->first() : null;
+    /**
+     * @throws CouldNotConnectException
+     */
+    public function destroy($url, $id)
+    {
+        try {
+            return $this->call("delete", $url, ['id' => $id]);
+        } catch (GuzzleException|ConfigException|CouldNotConnectException|PrestashopWebserviceException $e) {
+            throw new PrestashopWebserviceException($e->getMessage());
+        }
     }
 
     /**
      * Internal method to make the correct request call
      *
-     * @param string $method
+     * @param  string  $method
      *
-     * @return \Illuminate\Support\Collection
-     *
-     * @throws Exception
+     * @param  string|null  $url
+     * @param  mixed|null  $body
+     * @return array
+     * @throws ConfigException
+     * @throws CouldNotConnectException
+     * @throws GuzzleException
+     * @throws PrestashopWebserviceException
      */
-    protected function call(string $method)
+    protected function call(string $method, string $url = null, mixed $body = null): array
     {
         $this->method = in_array($method, ["get", "post", "put", "delete"]) ? $method : null;
 
         if ($this->canExecute()) {
-            return $this->response($this->exec());
+            $result = $this->exec($url, $body);
+            return $this->response($result);
         }
-
-        throw new Exception("Error occur when trying to execute the API call");
+        throw new CouldNotConnectException("Error occur when trying to execute the API call");
     }
 
     /**
@@ -452,24 +341,20 @@ class Prestashop
      *
      * @return bool
      *
-     * @throws Exception
+     * @throws ConfigException|CouldNotConnectException
      */
-    protected function canExecute()
+    protected function canExecute(): bool
     {
-        if (! $this->resource) {
-            throw new Exception("You need to define a resource.");
+        if (!$this->method) {
+            throw new ConfigException("You need to define a method.");
         }
 
-        if (! $this->method) {
-            throw new Exception("You need to define a method.");
+        if (!$this->shopUrl()) {
+            throw new ConfigException("No endpoint/ URL defined.");
         }
 
-        if (! $this->url()) {
-            throw new Exception("No endpoint/URL defined.");
-        }
-
-        if (! $this->token()) {
-            throw new Exception("No token defined.");
+        if (!$this->token()) {
+            throw new ConfigException("Token is not configured");
         }
 
         return true;
@@ -478,24 +363,87 @@ class Prestashop
     /**
      * Execute the request to Prestashop web service
      *
+     * @param  null  $url
+     * @param  mixed|null  $body
      * @return array
+     * @throws GuzzleException
+     * @throws PrestashopWebserviceException
+     * @throws Exception
      */
-    protected function exec()
+    protected function exec($url = null, mixed $body = null)
     {
-        $url = trim($this->url(), "/") . "/" . trim($this->resource, "/");
+        if (isset($url)) {
+            $url = $this->formatUrl($url);
+        } elseif (isset($this->resource)) {
+            $url = trim($this->shopUrl(), "/")."/".trim($this->resource, "/");
+        }
 
+        if ($this->method == "post") {
+            $headers = [
+                'Content-Type' => 'text/xml; charset=UTF8',
+                'Io-Format' => 'JSON',
+                'Output-Format' => 'JSON'
+            ];
+        } else {
+            $headers = $this->headers;
+        }
+        if ($this->method == "delete") {
+            $query = ['id' => "[".$body['id']."]"];
+            $body = null; //reset body
+        } else {
+            $query = $this->query();
+        }
 
-        $res = $this->http->request(
-            strtoupper($this->method),
-            $url,
-            [
-                RequestOptions::AUTH => [$this->token(), null],
-                RequestOptions::HEADERS => $this->headers,
-                RequestOptions::QUERY => $this->query(),
-            ]
-        );
+        try {
+            $res = $this->http->request(
+                strtoupper($this->method),
+                $url,
+                [
+                    RequestOptions::ALLOW_REDIRECTS,
+                    RequestOptions::AUTH => [$this->token(), null],
+                    RequestOptions::HEADERS => $headers,
+                    RequestOptions::QUERY => $query,
+                    'body' => $body
+                ],
+            );
 
-        return $res->getBody() ? json_decode($res->getBody(), true) : null;
+            return $res->getBody() ? json_decode($res->getBody(), true) : null;
+        } catch (ServerException|ClientException  $e) {
+            $response = $e->getResponse();
+            $responseBodyAsString = $response->getBody()->getContents();
+            throw new PrestashopWebserviceException($responseBodyAsString, $e->getCode());
+        } catch (Exception $e) {
+            throw new Exception("A global error which is undefined ?");
+        }
+    }
+
+    public function innerFilter($filter){
+
+    }
+    /**
+     * Add a filter to the web service call
+     *
+     * @param  string  $field
+     * @param  string  $operatorOrValue
+     * @param  string|array  $value
+     *
+     * @return $this
+     * @throws Exception
+     */
+    public function filter(string $field, string $operatorOrValue, $value = null): Prestashop
+    {
+        $operator = $value ? $operatorOrValue : '=';
+
+        if (!in_array(strtoupper($operator), Prestashop::FILTER_OPERATORS)) {
+            throw new CouldNotFindFilter('Invalid filter operator');
+        }
+
+        $this->filters[] = [
+            'field' => $field,
+            'operator' => strtoupper($operator),
+            'value' => $value ?: $operatorOrValue,
+        ];
+        return $this;
     }
 
     /**
@@ -503,11 +451,13 @@ class Prestashop
      *
      * @return array
      */
-    protected function query()
+    protected function query(): array
     {
+        $query = [];
+
         $query = [
             'display' => $this->display ?
-                "[" . implode(",", $this->display) . "]" : 'full',
+                "[".implode(",", $this->display)."]" : 'full',
         ];
 
         if ($this->limit) {
@@ -518,44 +468,61 @@ class Prestashop
 
         if ($this->filters) {
             foreach ($this->filters as $filter) {
-                if ($filter['operator'] === "|" || $filter['operator'] === "OR") {
-                    $value = "[" . implode("|", $filter['value']) . "]";
+                if (isset($filter['operator'])) {
+                    $value = null;
+                    if ($filter['operator'] === "|" || $filter['operator'] === "OR") {
+                        $value = "[".implode("|", $filter['value'])."]";
+                    }
+
+                    if ($filter['operator'] === "," || $filter['operator'] === "INTERVAL") {
+                        $value = "[".implode(",", $filter['value'])."]";
+                    }
+
+                    if ($filter['operator'] === "=" || $filter['operator'] === "LITERAL") {
+                        $value = "[".$filter['value']."]";
+                    }
+
+                    if ($filter['operator'] === "BEGIN") {
+                        $value = "[".$filter['value']."]%";
+                    }
+
+                    if ($filter['operator'] === "END") {
+                        $value = "%[".$filter['value']."]";
+                    }
+
+                    if ($filter['operator'] === "CONTAINS") {
+                        $value = "%[".$filter['value']."]%";
+                    }
+
+                    if($filter['operator'] === "INNER") {
+                          $query[$filter['field']] = $filter['value'];
+                    }
+                    if(isset($value)){
+                          $query["filter[".$filter['field']."]"] = $value;
+                    }
                 }
 
-                if ($filter['operator'] === "," || $filter['operator'] === "INTERVAL") {
-                    $value = "[" . implode(",", $filter['value']) . "]";
+                if (isset($filter['schema'])) {
+                    $query = []; // clear because we wanted only a blank schema!
+                    $query["schema"] = $filter['schema'];
+                }
+                if (isset($filter['field'])) {
+                    if (Str::contains($filter['field'], 'date')) {
+                        $query['date'] = 1;
+                    }
                 }
 
-                if ($filter['operator'] === "=" || $filter['operator'] === "LITERAL") {
-                    $value = "[" . $filter['value'] . "]";
-                }
-
-                if ($filter['operator'] === "BEGIN") {
-                    $value = "[" . $filter['value'] . "]%";
-                }
-
-                if ($filter['operator'] === "END") {
-                    $value = "%[" . $filter['value'] . "]";
-                }
-
-                if ($filter['operator'] === "CONTAINS") {
-                    $value = "%[" . $filter['value'] . "]%";
-                }
-
-                $query["filter[" . $filter['field'] . "]"] = $value;
-
-                if(Str::contains($filter['field'], 'date')){
-                    $query['date'] = 1;
-                }
             }
         }
 
+
         if ($this->sort) {
+            $sortQuery = [];
             foreach ($this->sort as $sort) {
                 $sortQuery[] = "{$sort['value']}_{$sort['order']}";
             }
 
-            $query['sort'] = "[" . implode(",", $sortQuery) . "]";
+            $query['sort'] = "[".implode(",", $sortQuery)."]";
         }
 
         if ($this->shop) {
@@ -570,7 +537,7 @@ class Prestashop
      *
      * @return string
      */
-    protected function token()
+    protected function token(): string
     {
         return $this->token ?: config('prestashop.shop.token');
     }
@@ -580,49 +547,79 @@ class Prestashop
      *
      * @return string
      */
-    protected function url()
+    protected function shopUrl(): ?string
     {
-        return $this->endpoint ?: config('prestashop.shop.endpoint');
+        return $this->shop_url != null ? $this->shop_url : config('prestashop.shop.shop_url');
+    }
+
+
+    /**
+     * @return String
+     */
+    private function getApiUrl(): string
+    {
+
+        return $this->shopUrl().$this->endpoint;
+    }
+
+    private function formatUrl($endpoint): string
+    {
+        return implode('/', [
+            $this->getApiUrl(),
+            $endpoint,
+        ]);
     }
 
     /**
-     * Format and delivery the response as Laravel Collection
+     * Handle basic response
      *
-     * @param array $response
+     * @param  array  $response
      *
-     * @return \Illuminate\Support\Collection
+     * @return array
      *
-     * @throws Exception
+     * @throws CouldNotConnectException
      */
-    protected function response(?array $response)
+    protected function response(?array $response): array
     {
-        if (! $response) {
-            throw new Exception("No response from server");
-        }
-
         $response = $response[$this->resource] ?? $response;
 
-        foreach ($response as $element) {
-            $data[] = new Resource($this->resource, $element);
+        if (count($response) >= 2) {
+            return $response;
         }
+        if (array_filter(array_keys($response), 'is_string')) {
+            $firstKey = array_key_first($response);
 
-        return collect($data ?? null);
+            return $response[$firstKey];
+
+        }
+        if (count($response) == 1) {
+            return $response[0];
+        }
+        return $response;
+
     }
 
     /**
      * Create the method for each web service resource
      *
-     * @param string $method
-     * @param array  $arguments
+     * @param  string  $method
+     * @param  array  $arguments
      *
      * @return mixed
+     * @throws CouldNotFindResource
      */
     public function __call(string $method, array $arguments)
     {
-        if (in_array($method, self::RESOURCES)) {
-            return $this->resource($method, $arguments);
-        }
+        $method = strtolower($method);
+        if (in_array(strtolower($method), self::RESOURCES)) {
 
-        throw new Exception("This is not a valid resource");
+            //@todo return Model instance
+            $this->resource = $method;
+
+            $class = "\Lucasgiovanny\LaravelPrestashop\Resources\\".ucfirst($method);
+            return new $class($this, $arguments);
+
+        }
+        throw new CouldNotFindResource();
     }
 }
