@@ -600,7 +600,7 @@ class Prestashop
             throw new Exception("No response from server");
         }
 
-        $response = $response[$this->resource] ?? $response;
+        $response = $response[$this->resource] ?? end($response);
 
         foreach ($response as $element) {
             $data[] = new Resource($this->resource, $element);
