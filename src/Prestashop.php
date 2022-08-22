@@ -484,6 +484,8 @@ class Prestashop
     {
         $url = trim($this->url(), "/") . "/" . trim($this->resource, "/");
 
+        $url .= '?'.http_build_query($this->query());
+        $url = urldecode($url);
 
         $res = $this->http->request(
             strtoupper($this->method),
@@ -491,7 +493,6 @@ class Prestashop
             [
                 RequestOptions::AUTH => [$this->token(), null],
                 RequestOptions::HEADERS => $this->headers,
-                RequestOptions::QUERY => $this->query(),
             ]
         );
 
