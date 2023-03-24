@@ -63,10 +63,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Lucasgiovanny\\LaravelPrestashop\\LaravelPrestashopServiceProvider"
+                "LucasGiovanny\\LaravelPrestashop\\LaravelPrestashopServiceProvider"
             ],
             "aliases": {
-                "LaravelPrestashop": "Lucasgiovanny\\LaravelPrestashop\\LaravelPrestashopFacade"
+                "LaravelPrestashop": "LucasGiovanny\\LaravelPrestashop\\LaravelPrestashopFacade"
             }
         }
     },
