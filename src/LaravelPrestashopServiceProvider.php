@@ -1,6 +1,6 @@
 <?php
 
-namespace Lucasgiovanny\LaravelPrestashop;
+namespace LucasGiovanny\LaravelPrestashop;
 
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;

@@ -1,8 +1,10 @@
 <?php
 
-namespace Lucasgiovanny\LaravelPrestashop\Tests;
+namespace LucasGiovanny\LaravelPrestashop\Tests;
 
-use Lucasgiovanny\LaravelPrestashop\LaravelPrestashopServiceProvider;
+
+use LucasGiovanny\LaravelPrestashop\LaravelPrestashopServiceProvider;
+
 use Orchestra\Testbench\TestCase as Orchestra;
 
 class TestCase extends Orchestra

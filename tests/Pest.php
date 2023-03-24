@@ -11,6 +11,7 @@
 |
 */
 
-use Lucasgiovanny\LaravelPrestashop\Tests\TestCase;
+
+use LucasGiovanny\LaravelPrestashop\Tests\TestCase;
 
 uses(TestCase::class)->in(__DIR__);

@@ -1,13 +1,13 @@
 <?php
 
-namespace Lucasgiovanny\LaravelPrestashop\Facades;
+namespace LucasGiovanny\LaravelPrestashop\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use Lucasgiovanny\LaravelPrestashop\Prestashop as PrestashopService;
+use LucasGiovanny\LaravelPrestashop\Prestashop as PrestashopService;
 
-    /**
-     * @see \Lucasgiovanny\LaravelPrestashop\Prestashop
-     */
+/**
+ * @see \LucasGiovanny\LaravelPrestashop\Prestashop
+ */
 class Prestashop extends Facade
 {
     /**
@@ -20,7 +20,7 @@ class Prestashop extends Facade
     protected static function getFacadeAccessor()
     {
         self::clearResolvedInstance(PrestashopService::class);
-        
+
         return PrestashopService::class;
     }
 }
