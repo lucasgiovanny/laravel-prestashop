@@ -1,8 +1,9 @@
 <?php
 
-namespace Lucasgiovanny\LaravelPrestashop\Resources;
-use Lucasgiovanny\LaravelPrestashop\Query;
-use Lucasgiovanny\LaravelPrestashop\Persistance;
+namespace LucasGiovanny\LaravelPrestashop\Resources;
+
+use LucasGiovanny\LaravelPrestashop\Persistance;
+use LucasGiovanny\LaravelPrestashop\Query;
 
 class OrderInvoices extends Model
 {
@@ -30,5 +31,6 @@ class OrderInvoices extends Model
         'note',
         'date_add',
     ];
+
     protected $url = 'order_invoices';
 }

@@ -1,8 +1,9 @@
 <?php
 
-namespace Lucasgiovanny\LaravelPrestashop\Resources;
-use Lucasgiovanny\LaravelPrestashop\Query;
-use Lucasgiovanny\LaravelPrestashop\Persistance;
+namespace LucasGiovanny\LaravelPrestashop\Resources;
+
+use LucasGiovanny\LaravelPrestashop\Persistance;
+use LucasGiovanny\LaravelPrestashop\Query;
 
 class Customer extends Model
 {
@@ -43,7 +44,8 @@ class Customer extends Model
         'date_upd',
         'reset_password_token',
         'reset_password_validity',
-        'associations'
+        'associations',
     ];
+
     protected $url = 'customers';
 }

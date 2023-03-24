@@ -1,13 +1,13 @@
 <?php
 
-namespace Lucasgiovanny\LaravelPrestashop\Facades;
+namespace LucasGiovanny\LaravelPrestashop\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use Lucasgiovanny\LaravelPrestashop\Prestashop as PrestashopService;
+use LucasGiovanny\LaravelPrestashop\Prestashop as PrestashopService;
 
-    /**
-     * @see \Lucasgiovanny\LaravelPrestashop\Prestashop
-     */
+/**
+ * @see \LucasGiovanny\LaravelPrestashop\Prestashop
+ */
 class Prestashop extends Facade
 {
     /**

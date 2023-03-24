@@ -1,10 +1,9 @@
 <?php
 
-namespace Lucasgiovanny\LaravelPrestashop\Resources;
+namespace LucasGiovanny\LaravelPrestashop\Resources;
 
-use Lucasgiovanny\LaravelPrestashop\Query;
-use Lucasgiovanny\LaravelPrestashop\Persistance;
-use Lucasgiovanny\LaravelPrestashop\Resources\Model;
+use LucasGiovanny\LaravelPrestashop\Persistance;
+use LucasGiovanny\LaravelPrestashop\Query;
 
 class Carts extends Model
 {
@@ -22,7 +21,7 @@ class Carts extends Model
         'id_shop_group' => 'nullable|numeric',
         'id_shop' => 'nullable|nullable',
         'id_carrier' => 'nullable|nullable',
-        'gift_message' => "nullable|string",
+        'gift_message' => 'nullable|string',
         'associations.cart_rows' => 'array',
         'associations.cart_rows.*.id_product' => 'required|numeric',
         'associations.cart_rows.*.id_product_attribute' => 'nullable|numeric',
@@ -66,7 +65,7 @@ class Carts extends Model
     ];
 
     protected $attributes = [
-        'associations' => []
+        'associations' => [],
     ];
 
     public function setAssociationsAttribute($associations)
@@ -76,12 +75,13 @@ class Carts extends Model
             foreach ($associations['cart_rows'] as $k => $association) {
                 $array['cart_row'.$k] = $association;
             }
-             $this->attributes['associations']['cart_rows'] = $array;
+            $this->attributes['associations']['cart_rows'] = $array;
         } else {
             $this->attributes['associations'] = $associations;
         }
     }
 
-    protected $xml_header = "cart";
+    protected $xml_header = 'cart';
+
     protected $url = 'carts';
 }

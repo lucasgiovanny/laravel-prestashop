@@ -1,12 +1,9 @@
 <?php
 
-namespace Lucasgiovanny\LaravelPrestashop\Resources;
+namespace LucasGiovanny\LaravelPrestashop\Resources;
 
-use Lucasgiovanny\LaravelPrestashop\Prestashop;
-
-use Lucasgiovanny\LaravelPrestashop\Query;
-use Lucasgiovanny\LaravelPrestashop\Persistance;
-use Lucasgiovanny\LaravelPrestashop\Resources\Model;
+use LucasGiovanny\LaravelPrestashop\Persistance;
+use LucasGiovanny\LaravelPrestashop\Query;
 
 class Products extends Model
 {
@@ -85,17 +82,18 @@ class Products extends Model
         'available_now',
         'available_later',
         'associations',
-        'my_price'
+        'my_price',
     ];
 
     /**
      * Search for a specific price
      * Example Let’s say you want to retrieve the price for product 2, with tax, in a webservice field name my_price, then the result query is:
      * /api/products/2?price[my_price][use_tax]=1
+     *
      * @param $search string
      * @param $value string
      * @param  string|null  $custom_field  string
-     * @return Products
+     *
      * @throws \Exception
      */
     public function getPriceBy(string $search, string $value, string $custom_field = null): Products
@@ -105,9 +103,11 @@ class Products extends Model
             $this->addFillable($custom_field);
         }
         $this->filter('price['.$field.']['.$search.']', 'INNER', $value);
+
         return $this;
     }
 
-    protected $xml_header = "product";
+    protected $xml_header = 'product';
+
     protected $url = 'products';
 }

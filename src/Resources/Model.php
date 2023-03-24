@@ -1,13 +1,11 @@
 <?php
 
-namespace Lucasgiovanny\LaravelPrestashop\Resources;
+namespace LucasGiovanny\LaravelPrestashop\Resources;
 
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\MessageBag;
 use Illuminate\Validation\Validator;
-use Lucasgiovanny\LaravelPrestashop\Persistance\Storable;
-use Lucasgiovanny\LaravelPrestashop\Prestashop;
-use Nette\Utils\Validators;
+use LucasGiovanny\LaravelPrestashop\Prestashop;
 
 abstract class Model implements \JsonSerializable
 {
@@ -15,6 +13,7 @@ abstract class Model implements \JsonSerializable
      * @var Prestashop
      */
     protected $connection = null;
+
     /**
      * @var array The model's attributes
      */
@@ -34,6 +33,7 @@ abstract class Model implements \JsonSerializable
      * @var string the xml header
      */
     protected $xml_header = '';
+
     /**
      * @var string The URL endpoint of this model
      */
@@ -43,7 +43,6 @@ abstract class Model implements \JsonSerializable
      * @var string Name of the primary key for this model
      */
     protected $primaryKey = 'id';
-
 
     /**
      * Error message bag
@@ -57,14 +56,15 @@ abstract class Model implements \JsonSerializable
      *
      * @var array
      */
-    protected static $rules = array();
+    protected static $rules = [];
 
     /**
      * Custom messages
      *
      * @var array
      */
-    protected static $messages = array();
+    protected static $messages = [];
+
     /**
      * Validator instance
      *
@@ -72,11 +72,6 @@ abstract class Model implements \JsonSerializable
      */
     protected $validator;
 
-    /**
-     * @param  Prestashop|null  $connection
-     * @param $attributes
-     * @param  Validator|null  $validator
-     */
     public function __construct(Prestashop $connection = null, $attributes = [], Validator $validator = null)
     {
         //Set connection if there is, otherwise use Facade with default settings
@@ -103,8 +98,8 @@ abstract class Model implements \JsonSerializable
         if ($v->passes()) {
             return true;
         }
-      return $v->messages();
 
+        return $v->messages();
     }
 
     /**
@@ -119,6 +114,7 @@ abstract class Model implements \JsonSerializable
         }
 
         $this->setErrors($v->messages());
+
         return false;
     }
 
@@ -145,13 +141,11 @@ abstract class Model implements \JsonSerializable
      */
     public function hasErrors(): bool
     {
-        return !empty($this->errors);
+        return ! empty($this->errors);
     }
 
     /**
      * Get the connection instance.
-     *
-     * @return Prestashop
      */
     public function connection(): Prestashop
     {
@@ -170,21 +164,18 @@ abstract class Model implements \JsonSerializable
 
     /**
      * Get the model's url.
-     *
-     * @return string
      */
     public function url($id = null): string
     {
         if (isset($id)) {
-            return $this->url."/".$id;
+            return $this->url.'/'.$id;
         }
+
         return $this->url;
     }
 
     /**
      * Get the model's primary key.
-     *
-     * @return string
      */
     public function primaryKey(): string
     {
@@ -203,12 +194,9 @@ abstract class Model implements \JsonSerializable
 
     /**
      * Fill the entity from an array.
-     *
-     * @param  array  $attributes
      */
     protected function fill(array $attributes)
     {
-
         foreach ($this->fillableFromArray($attributes) as $key => $value) {
             if ($this->isFillable($key)) {
                 $this->setAttribute($key, $value);
@@ -218,10 +206,6 @@ abstract class Model implements \JsonSerializable
 
     /**
      * Get the fillable attributes of an array.
-     *
-     * @param  array  $attributes
-     *
-     * @return array
      */
     protected function fillableFromArray(array $attributes): array
     {
@@ -232,9 +216,11 @@ abstract class Model implements \JsonSerializable
         return $attributes;
     }
 
-    protected function addFillable($key){
+    protected function addFillable($key)
+    {
         $this->fillable[] = $key;
     }
+
     protected function isFillable($key)
     {
         return in_array($key, $this->fillable);
@@ -249,7 +235,6 @@ abstract class Model implements \JsonSerializable
     {
         $this->attributes[$key] = $value;
     }
-
 
     public function __get($key)
     {
@@ -285,7 +270,6 @@ abstract class Model implements \JsonSerializable
      * Refresh deferred item by clearing and then lazy loading it.
      *
      * @param  mixed  $key
-     *
      * @return mixed
      */
     public function refresh($key)
@@ -297,23 +281,20 @@ abstract class Model implements \JsonSerializable
 
     /**
      * Checks if primaryKey holds a value.
-     *
-     * @return bool
      */
     public function exists(): bool
     {
-        if (!array_key_exists($this->primaryKey, $this->attributes)) {
+        if (! array_key_exists($this->primaryKey, $this->attributes)) {
             return false;
         }
-        return !empty($this->attributes[$this->primaryKey]);
+
+        return ! empty($this->attributes[$this->primaryKey]);
     }
 
     /**
      * Return the JSON representation of the data.
      *
      * @param  int  $options  http://php.net/manual/en/json.constants.php
-     *
-     * @return string
      */
     public function json(int $options = 0, $withDeferred = false): string
     {
@@ -326,7 +307,7 @@ abstract class Model implements \JsonSerializable
 
                 $attributes[$attribute] = [];
                 foreach ($collection as $value) {
-                    if (!empty($value->deferred)) {
+                    if (! empty($value->deferred)) {
                         $value->attributes = array_merge($value->attributes, $value->deferred);
                     }
 
@@ -344,8 +325,6 @@ abstract class Model implements \JsonSerializable
 
     /**
      * Return serializable data.
-     *
-     * @return array
      */
     public function jsonSerialize(): array
     {

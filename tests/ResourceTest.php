@@ -1,19 +1,11 @@
 <?php
 
-namespace Lucasgiovanny\LaravelPrestashop\Tests;
+namespace LucasGiovanny\LaravelPrestashop\Tests;
 
-use Generator;
+use LucasGiovanny\LaravelPrestashop\Resources\Orders;
+use LucasGiovanny\LaravelPrestashop\Tests\Support\MocksPrestashopConnection;
 
-use GuzzleHttp\Handler\MockHandler;
-
-use Lucasgiovanny\LaravelPrestashop\Prestashop;
-use Lucasgiovanny\LaravelPrestashop\Query\Resultset;
-use Lucasgiovanny\LaravelPrestashop\Resources\Orders;
-
-use Lucasgiovanny\LaravelPrestashop\Tests\Support\MocksPrestashopConnection;
-
-class ResourceTest extends  \Orchestra\Testbench\TestCase
-
+class ResourceTest extends \Orchestra\Testbench\TestCase
 {
     use MocksPrestashopConnection;
 
@@ -23,7 +15,7 @@ class ResourceTest extends  \Orchestra\Testbench\TestCase
     }
 
     /**
-     * @throws \Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotFindFilter
+     * @throws \LucasGiovanny\LaravelPrestashop\Exceptions\CouldNotFindFilter
      */
     public function testCanFindModel()
     {
@@ -35,7 +27,7 @@ class ResourceTest extends  \Orchestra\Testbench\TestCase
     }
 
     /**
-     * @throws \Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotConnectException
+     * @throws \LucasGiovanny\LaravelPrestashop\Exceptions\CouldNotConnectException
      */
     public function testCanGetFirstModel()
     {
@@ -49,8 +41,8 @@ class ResourceTest extends  \Orchestra\Testbench\TestCase
     }
 
     /**
-     * @throws \Lucasgiovanny\LaravelPrestashop\Exceptions\ConfigException
-     * @throws \Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotConnectException
+     * @throws \LucasGiovanny\LaravelPrestashop\Exceptions\ConfigException
+     * @throws \LucasGiovanny\LaravelPrestashop\Exceptions\CouldNotConnectException
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function testCanGetModels()
@@ -65,10 +57,9 @@ class ResourceTest extends  \Orchestra\Testbench\TestCase
         $this->assertCount(2, $response);
     }
 
-
     /**
-     * @throws \Lucasgiovanny\LaravelPrestashop\Exceptions\ConfigException
-     * @throws \Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotConnectException
+     * @throws \LucasGiovanny\LaravelPrestashop\Exceptions\ConfigException
+     * @throws \LucasGiovanny\LaravelPrestashop\Exceptions\CouldNotConnectException
      * @throws \GuzzleHttp\Exception\GuzzleException
      * @throws \Exception
      */
@@ -88,6 +79,4 @@ class ResourceTest extends  \Orchestra\Testbench\TestCase
      * @throws \Exception
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-
-
 }

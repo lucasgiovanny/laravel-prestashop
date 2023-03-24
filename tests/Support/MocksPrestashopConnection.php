@@ -1,26 +1,24 @@
 <?php
 
-namespace Lucasgiovanny\LaravelPrestashop\Tests\Support;
+namespace LucasGiovanny\LaravelPrestashop\Tests\Support;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
-use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
-use Lucasgiovanny\LaravelPrestashop\Prestashop;
+use LucasGiovanny\LaravelPrestashop\Prestashop;
 
 trait MocksPrestashopConnection
 {
     protected $mockHandler;
 
-
     protected function createMockConnection(): Prestashop
     {
-
         $httpClient = new Client([
             'handler' => $this->mockHandler,
         ]);
         $presta = new Prestashop($httpClient);
-        $presta->shop("https://prestashop.pdik.nl","/api",'1224356432');
+        $presta->shop('https://prestashop.pdik.nl', '/api', '1224356432');
+
         return $presta;
     }
 

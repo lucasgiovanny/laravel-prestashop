@@ -1,10 +1,9 @@
 <?php
 
-namespace Lucasgiovanny\LaravelPrestashop\Resources;
+namespace LucasGiovanny\LaravelPrestashop\Resources;
 
-use Lucasgiovanny\LaravelPrestashop\Query;
-use Lucasgiovanny\LaravelPrestashop\Persistance;
-use Lucasgiovanny\LaravelPrestashop\Resources\Model;
+use LucasGiovanny\LaravelPrestashop\Persistance;
+use LucasGiovanny\LaravelPrestashop\Query;
 
 class Addresses extends Model
 {
@@ -28,6 +27,7 @@ class Addresses extends Model
         'id_country.required' => 'Country is required',
         'alias.required' => 'Alias is required',
     ];
+
     protected $fillable = [
         'id',
         'id_customer',
@@ -53,6 +53,8 @@ class Addresses extends Model
         'date_add',
         'date_upd',
     ];
-    protected $xml_header = "address";
+
+    protected $xml_header = 'address';
+
     protected $url = 'addresses';
 }

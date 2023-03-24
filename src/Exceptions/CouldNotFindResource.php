@@ -1,8 +1,10 @@
 <?php
 
-namespace Lucasgiovanny\LaravelPrestashop\Exceptions;
+namespace LucasGiovanny\LaravelPrestashop\Exceptions;
+
 use Exception;
 use Throwable;
+
 class CouldNotFindResource extends Exception
 {
     public function __construct(

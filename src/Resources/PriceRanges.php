@@ -1,9 +1,9 @@
 <?php
 
-namespace Lucasgiovanny\LaravelPrestashop\Resources;
+namespace LucasGiovanny\LaravelPrestashop\Resources;
 
-use Lucasgiovanny\LaravelPrestashop\Query;
-use Lucasgiovanny\LaravelPrestashop\Persistance;
+use LucasGiovanny\LaravelPrestashop\Persistance;
+use LucasGiovanny\LaravelPrestashop\Query;
 
 class PriceRanges extends Model
 {
@@ -13,14 +13,16 @@ class PriceRanges extends Model
     protected static $rules = [
         'id_carrier' => 'required|numeric',
         'delimiter1' => 'required|numeric',
-        'delimiter2' => 'required|numeric'
+        'delimiter2' => 'required|numeric',
     ];
 
     protected $fillable = [
         'id_carrier',
         'delimiter1',
-        'delimiter2'
+        'delimiter2',
     ];
-     protected $xml_header = "price_range";
+
+    protected $xml_header = 'price_range';
+
     protected $url = 'price_ranges';
 }

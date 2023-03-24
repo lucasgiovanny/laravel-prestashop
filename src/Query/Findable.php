@@ -1,36 +1,23 @@
 <?php
 
-namespace Lucasgiovanny\LaravelPrestashop\Query;
-
+namespace LucasGiovanny\LaravelPrestashop\Query;
 
 use Exception;
-use GuzzleHttp\Exception\GuzzleException;
-use Lucasgiovanny\LaravelPrestashop\Exceptions\ConfigException;
-use Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotConnectException;
-use Lucasgiovanny\LaravelPrestashop\Exceptions\CouldNotFindFilter;
-use Lucasgiovanny\LaravelPrestashop\Prestashop;
-use Lucasgiovanny\LaravelPrestashop\Resources\Model;
+use LucasGiovanny\LaravelPrestashop\Exceptions\CouldNotConnectException;
+use LucasGiovanny\LaravelPrestashop\Exceptions\CouldNotFindFilter;
+use LucasGiovanny\LaravelPrestashop\Prestashop;
 
 trait Findable
 {
-    /**
-     * @return Prestashop
-     */
     abstract public function connection(): Prestashop;
 
     abstract protected function isFillable($key);
 
-    /**
-     * @return string
-     */
     abstract public function url(): string;
-
 
     /**
      * Add sort fields by ASC
      *
-     * @param  string  $field
-     * @param  string  $order
      * @return $this
      */
     protected function sort(string $field, string $order)
@@ -39,19 +26,19 @@ trait Findable
             'value' => $field,
             'order' => $order,
         ];
+
         return $this;
     }
 
     /**
      * Add sort fields by DESC
      *
-     * @param  string  $field
      *
      * @return $this
      */
     public function sortBy(string $field)
     {
-        $this->sort($field, "ASC");
+        $this->sort($field, 'ASC');
 
         return $this;
     }
@@ -59,13 +46,12 @@ trait Findable
     /**
      * Add sort fields by DESC
      *
-     * @param  string  $field
      *
      * @return $this
      */
     public function sortByDesc(string $field)
     {
-        $this->sort($field, "DESC");
+        $this->sort($field, 'DESC');
 
         return $this;
     }
@@ -73,13 +59,12 @@ trait Findable
     /**
      * Alias for sortBy
      *
-     * @param  string  $field
      *
      * @return $this
      */
     public function orderBy(string $field)
     {
-        $this->sort($field, "ASC");
+        $this->sort($field, 'ASC');
 
         return $this;
     }
@@ -87,13 +72,12 @@ trait Findable
     /**
      * Alias for sortByDesc
      *
-     * @param  string  $field
      *
      * @return $this
      */
     public function orderByDesc(string $field)
     {
-        $this->sort($field, "DESC");
+        $this->sort($field, 'DESC');
 
         return $this;
     }
@@ -102,7 +86,6 @@ trait Findable
      * Shortcut for display method
      *
      * @param  string|array  $fields
-     *
      * @return $this
      */
     public function select($fields)
@@ -114,7 +97,6 @@ trait Findable
      * Select fields to be returned by web service
      *
      * @param  array|string  $fields
-     *
      * @return $this
      */
     public function display($fields)
@@ -127,16 +109,15 @@ trait Findable
     /**
      * Shortcut to filter method
      *
-     * @param  string  $field
-     * @param  string  $operatorOrValue
      * @param  array|string|null  $value
-     *
      * @return $this
+     *
      * @throws Exception
      */
     public function where(string $field, string $operatorOrValue, $value = null)
     {
         $this->connection()->filter($field, $operatorOrValue, $value);
+
         return $this;
     }
 
@@ -144,6 +125,7 @@ trait Findable
      * Execute the get request and return first result
      *
      * @return Findable
+     *
      * @throws CouldNotConnectException
      */
     public function first()
@@ -154,13 +136,13 @@ trait Findable
         } else {
             $response = $get;
         }
+
         return new static($this->connection(), $response);
     }
 
     /**
      * Execute the get request with the condition applied
      *
-     * @param  int  $id
      *
      * @throws CouldNotFindFilter
      * @throws CouldNotConnectException
@@ -168,7 +150,7 @@ trait Findable
     public function find(int $id)
     {
         if ($this->connection()->filters) {
-            throw new CouldNotFindFilter("You can not use find method along with filters");
+            throw new CouldNotFindFilter('You can not use find method along with filters');
         }
 
         $this->connection()->filters = [
@@ -179,18 +161,20 @@ trait Findable
             ],
         ];
 
-
         $r = $this->connection()->get($this->url());
+
         return new static($this->connection(), $r);
     }
 
     /**
      * Add a filter to query
+     *
      * @throws Exception
      */
     public function filter(string $field, string $operatorOrValue, $value = null)
     {
         $this->connection()->filter($field, $operatorOrValue, $value);
+
         return $this;
     }
 
@@ -214,6 +198,7 @@ trait Findable
 
     /**
      * get Resources
+     *
      * @throws CouldNotConnectException
      */
     public function get(array $params = []): array
@@ -242,12 +227,11 @@ trait Findable
     {
         // If we have one result which is not an assoc array, make it the first element of an array for the
         // collectionFromResult function so we always return a collection from filter
-        if ((bool)count(array_filter(array_keys($result), 'is_string'))) {
+        if ((bool) count(array_filter(array_keys($result), 'is_string'))) {
             $result = [$result];
         }
         foreach ($result as $row) {
             yield new static($this->connection(), $row);
         }
     }
-
 }

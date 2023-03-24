@@ -1,13 +1,13 @@
 <?php
 
-namespace Lucasgiovanny\LaravelPrestashop\Query;
+namespace LucasGiovanny\LaravelPrestashop\Query;
 
-use Lucasgiovanny\LaravelPrestashop\Prestashop;
-
+use LucasGiovanny\LaravelPrestashop\Prestashop;
 
 class Resultset
 {
     protected Prestashop $connection;
+
     /**
      * @var string
      */
@@ -25,11 +25,6 @@ class Resultset
 
     /**
      * Resultset constructor.
-     *
-     * @param  Prestashop  $connection
-     * @param  string  $url
-     * @param  string  $class
-     * @param  array  $params
      */
     public function __construct(Prestashop $connection, string $url, string $class, array $params)
     {
@@ -39,10 +34,6 @@ class Resultset
         $this->params = $params;
     }
 
-    /**
-     * @param  array  $result
-     * @return \Illuminate\Support\Collection
-     */
     protected function collectionFromResult(array $result): \Illuminate\Support\Collection
     {
         // If we have one result which is not an assoc array, make it the first element of an array for the
@@ -55,8 +46,7 @@ class Resultset
         foreach ($result as $r) {
             $collection[] = new $class($this->connection, $r);
         }
+
         return collect($collection);
     }
-
-
 }

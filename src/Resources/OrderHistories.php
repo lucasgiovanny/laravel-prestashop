@@ -1,10 +1,9 @@
 <?php
 
-namespace Lucasgiovanny\LaravelPrestashop\Resources;
+namespace LucasGiovanny\LaravelPrestashop\Resources;
 
-
-use Lucasgiovanny\LaravelPrestashop\Query;
-use Lucasgiovanny\LaravelPrestashop\Persistance;
+use LucasGiovanny\LaravelPrestashop\Persistance;
+use LucasGiovanny\LaravelPrestashop\Query;
 
 class OrderHistories extends Model
 {
@@ -18,5 +17,6 @@ class OrderHistories extends Model
         'id_order',
         'date_add',
     ];
+
     protected $url = 'order_histories';
 }

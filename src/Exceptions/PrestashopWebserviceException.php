@@ -1,6 +1,6 @@
 <?php
 
-namespace Lucasgiovanny\LaravelPrestashop\Exceptions;
+namespace LucasGiovanny\LaravelPrestashop\Exceptions;
 
 use Exception;
 use Throwable;

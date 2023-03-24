@@ -1,9 +1,9 @@
 <?php
 
-namespace Lucasgiovanny\LaravelPrestashop\Resources;
+namespace LucasGiovanny\LaravelPrestashop\Resources;
 
-use Lucasgiovanny\LaravelPrestashop\Query;
-use Lucasgiovanny\LaravelPrestashop\Persistance;
+use LucasGiovanny\LaravelPrestashop\Persistance;
+use LucasGiovanny\LaravelPrestashop\Query;
 
 class OrderDetials extends Model
 {
@@ -59,7 +59,8 @@ class OrderDetials extends Model
         'original_wholesale_price',
         'total_refunded_tax_excl',
         'total_refunded_tax_incl',
-        'associations'
+        'associations',
     ];
+
     protected $url = 'order_histories';
 }

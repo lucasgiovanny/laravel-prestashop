@@ -1,11 +1,11 @@
 <?php
 
-namespace Lucasgiovanny\LaravelPrestashop;
+namespace LucasGiovanny\LaravelPrestashop;
+
 use SimpleXMLElement;
 
 class SimpleXMLExtended extends SimpleXMLElement
 {
-
     public function addCData($cdata_text)
     {
         $node = dom_import_simplexml($this);
@@ -13,5 +13,4 @@ class SimpleXMLExtended extends SimpleXMLElement
 
         $node->appendChild($no->createCDATASection($cdata_text));
     }
-
 }
