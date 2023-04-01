@@ -33,3 +33,9 @@ it('should be able to get orders', function () {
         ->and($order->first())->toBeInstanceOf(OrderResource::class)
         ->and($order->first()->id)->toBe(6);
 });
+
+todo('should be able to select specific orders fields');
+todo('should be able to get orders with filters');
+todo('should be able to sort orders');
+todo('should be able to get orders with filters and limit');
+todo('should be able to get orders with limit');

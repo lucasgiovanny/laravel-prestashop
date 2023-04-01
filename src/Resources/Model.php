@@ -6,6 +6,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\MessageBag;
 use Illuminate\Validation\Validator;
 use JsonSerializable;
+use LucasGiovanny\LaravelPrestashop\Exceptions\CouldNotConnectToPrestashopException;
 use LucasGiovanny\LaravelPrestashop\Prestashop;
 
 abstract class Model implements JsonSerializable
@@ -67,9 +68,22 @@ abstract class Model implements JsonSerializable
         $this->attributes[$key] = $value;
     }
 
+    /**
+     * Return all the registers from API
+     *
+     * @throws CouldNotConnectToPrestashopException
+     */
     public function all(): Collection
     {
-        return $this->prestashop->get();
+        $collection = new Collection();
+
+        foreach ($this->prestashop->get() as $item) {
+            $model = new static($this->prestashop);
+            $model->fill($item);
+            $collection->push($model);
+        }
+
+        return $collection;
     }
 
     /*!!!!!***** Refactor from here ****/
