@@ -11,7 +11,7 @@
 |
 */
 
-// uses(Tests\TestCase::class)->in('Feature');
+uses(\LucasGiovanny\LaravelPrestashop\Tests\TestCase::class)->in(__DIR__);
 
 /*
 |--------------------------------------------------------------------------
@@ -39,7 +39,7 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+function prestashopMock(string $path): array
 {
-    // ..
+    return json_decode(file_get_contents(__DIR__."/fixtures/{$path}.json"), true);
 }

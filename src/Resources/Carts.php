@@ -7,7 +7,7 @@ use LucasGiovanny\LaravelPrestashop\Query;
 
 class Carts extends Model
 {
-    use Query\Findable;
+    use Query\Searchable;
     use Persistance\Storable;
 
     protected static $rules = [
@@ -41,7 +41,7 @@ class Carts extends Model
         'associations.cart_rows.array' => 'cart_rows must be an array',
     ];
 
-    protected $fillable = [
+    protected array $fillable = [
         'id',
         'id_address_delivery',
         'id_address_invoice',
@@ -64,7 +64,7 @@ class Carts extends Model
         'associations',
     ];
 
-    protected $attributes = [
+    protected array $attributes = [
         'associations' => [],
     ];
 

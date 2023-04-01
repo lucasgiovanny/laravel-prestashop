@@ -7,10 +7,10 @@ use LucasGiovanny\LaravelPrestashop\Query;
 
 class Customer extends Model
 {
-    use Query\Findable;
+    use Query\Searchable;
     use Persistance\Storable;
 
-    protected $fillable = [
+    protected array $fillable = [
         'id',
         'id_default_group',
         'id_lang',

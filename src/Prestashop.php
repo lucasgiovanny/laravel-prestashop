@@ -10,16 +10,16 @@ use GuzzleHttp\Exception\ServerException;
 use GuzzleHttp\RequestOptions;
 use Illuminate\Support\Str;
 use LucasGiovanny\LaravelPrestashop\Exceptions\ConfigException;
-use LucasGiovanny\LaravelPrestashop\Exceptions\CouldNotConnectException;
-use LucasGiovanny\LaravelPrestashop\Exceptions\CouldNotFindFilter;
+use LucasGiovanny\LaravelPrestashop\Exceptions\CouldNotConnectToPrestashopException;
 use LucasGiovanny\LaravelPrestashop\Exceptions\CouldNotFindResource;
 use LucasGiovanny\LaravelPrestashop\Exceptions\PrestashopWebserviceException;
-use LucasGiovanny\LaravelPrestashop\Resources\Model;
 
 class Prestashop
 {
     /**
-     * All available resources on Prestashop web service
+     * Available resources from Prestashop Webservice
+     *
+     * @see https://devdocs.prestashop-project.org/8/webservice/reference/#available-resources
      */
     public const RESOURCES = [
         'addresses',
@@ -69,7 +69,7 @@ class Prestashop
         'specific_price_rules',
         'specific_prices',
         'states',
-        'stock_availables',
+        'stock_available',
         'stock_movement_reasons',
         'stock_movements',
         'stocks',
@@ -92,7 +92,9 @@ class Prestashop
     ];
 
     /**
-     * All allowed filters
+     * Allowed filters from Prestashop Webservice
+     *
+     * @see https://devdocs.prestashop-project.org/8/webservice/cheat-sheet/#list-options
      */
     public const FILTER_OPERATORS = [
         '|',
@@ -107,10 +109,36 @@ class Prestashop
         'INNER',
     ];
 
+    protected array $filters = [];
+
+    /**
+     * Construct the class with dependencies
+     */
+    public function __construct(protected ?HttpClient $client = null)
+    {
+        $this->client = $client ?: new HttpClient;
+    }
+
+    /**
+     * Add a new filter to the request
+     */
+    public function addFilter(array $filter): void
+    {
+        $this->filters[] = $filter;
+    }
+
+    /*
+     * Clean all filters of the request
+     */
+    public function cleanFilters(): void
+    {
+        $this->filters = [];
+    }
+
+    /****** refactor below this///
+
     /**
      * Resource that will be called
-     *
-     * @var string
      */
     protected ?string $resource = null;
 
@@ -120,16 +148,9 @@ class Prestashop
     protected array $display = [];
 
     /**
-     * Filters to be added to the request
-     */
-    public array $filters = [];
-
-    /**
      * Define the limit for the request
-     *
-     * @var array|int
      */
-    protected $limit;
+    protected array|int $limit;
 
     /**
      * Define the sort fields for the request
@@ -137,63 +158,34 @@ class Prestashop
     protected array $sort = [];
 
     /**
-     * On-demand endpoint definition
+     * Prestashop store URL
      */
-    protected string $endpoint = '/api';
-
     protected ?string $shop_url = null;
 
     /**
-     * On-demand token definition
-     *
-     * @var string
+     * Prestashop API token
      */
     public ?string $token = null;
 
     /**
-     * Shop ID
-     *
-     * @var string
+     * In case of multiple shops, the shop id
      */
     public ?string $shop = null;
 
     /**
-     * Headers for request
+     * Default headers for the request
      */
     protected array $headers = [
         'Io-Format' => 'JSON',
         'Output-Format' => 'JSON',
     ];
 
-    protected HttpClient $http;
-
-    private ?string $method;
-
-    /**
-     * Construct the class with dependencies
-     *
-     * @param  HttpClient  $http
-     * @return void
-     */
-    public function __construct(HttpClient $http = null)
-    {
-        if ($http) {
-            $this->http = $http;
-        } else {
-            $this->http = new HttpClient();
-        }
-    }
-
     /**
      * Configure the Prestashop store
-     *
-     * @param  int  $shop
-     * @return $this
      */
-    public function shop(string $shop_url, string $endpoint, string $token, int $shop = null): Prestashop
+    public function store(string $url, string $token, string $shop = null): self
     {
-        $this->shop_url = $shop_url;
-        $this->endpoint = $endpoint;
+        $this->shop_url = $url;
         $this->token = $token;
         $this->shop = $shop;
 
@@ -201,25 +193,9 @@ class Prestashop
     }
 
     /**
-     * Configure the Prestashop store
-     *
-     * @param  int  $shop
-     * @return $this
-     */
-    public function store(string $shop_url, string $endpoint, string $token, int $shop = null): Prestashop
-    {
-        $this->shop($shop_url, $endpoint, $token, $shop);
-
-        return $this;
-    }
-
-    /**
      * Set the resource to be used
-     *
-     * @param  mixed  ...$arguments
-     * @return $this
      */
-    public function resource(string $resource, ...$arguments): Prestashop
+    public function resource(string $resource): self
     {
         $this->resource = $resource;
 
@@ -228,197 +204,10 @@ class Prestashop
 
     /**
      * Define the request limit or index and limit
-     *
-     * @param  int  $index
-     * @return $this
      */
-    public function limit(int $limit, int $index = null): Prestashop
+    public function limit(int $limit, int $index = null): self
     {
         $this->limit = $index ? [$index, $limit] : $limit;
-
-        return $this;
-    }
-
-    /**
-     * Execute the get request
-     *
-     * @throws CouldNotConnectException
-     */
-    public function get($url = null): array
-    {
-        try {
-            return $this->call('get', $url);
-        } catch (Exception|GuzzleException $e) {
-            throw new CouldNotConnectException($e->getMessage());
-        }
-    }
-
-    /**
-     * Handle post request
-     *
-     * @throws CouldNotConnectException
-     */
-    public function post($url, $body)
-    {
-        try {
-            $this->filters = [];
-
-            return $this->call('post', $url, $body);
-        } catch (CouldNotConnectException|ConfigException|GuzzleException $e) {
-            throw new CouldNotConnectException($e->getMessage());
-        }
-    }
-
-    /**
-     * @throws CouldNotConnectException
-     */
-    public function put($url, $body)
-    {
-        try {
-            return $this->call('put', $url, $body);
-        } catch (Exception|GuzzleException $e) {
-            throw new CouldNotConnectException($e->getMessage());
-        }
-    }
-
-    /**
-     * @throws CouldNotConnectException
-     */
-    public function destroy($url, $id)
-    {
-        try {
-            return $this->call('delete', $url, ['id' => $id]);
-        } catch (GuzzleException|ConfigException|CouldNotConnectException|PrestashopWebserviceException $e) {
-            throw new PrestashopWebserviceException($e->getMessage());
-        }
-    }
-
-    /**
-     * Internal method to make the correct request call
-     *
-     *
-     * @throws ConfigException
-     * @throws CouldNotConnectException
-     * @throws GuzzleException
-     * @throws PrestashopWebserviceException
-     */
-    protected function call(string $method, string $url = null, mixed $body = null): array
-    {
-        $this->method = in_array($method, ['get', 'post', 'put', 'delete']) ? $method : null;
-
-        if ($this->canExecute()) {
-            $result = $this->exec($url, $body);
-
-            return $this->response($result);
-        }
-        throw new CouldNotConnectException('Error occur when trying to execute the API call');
-    }
-
-    /**
-     * Check if the request can be executed
-     *
-     *
-     * @throws ConfigException|CouldNotConnectException
-     */
-    protected function canExecute(): bool
-    {
-        if (! $this->method) {
-            throw new ConfigException('You need to define a method.');
-        }
-
-        if (! $this->shopUrl()) {
-            throw new ConfigException('No endpoint/ URL defined.');
-        }
-
-        if (! $this->token()) {
-            throw new ConfigException('Token is not configured');
-        }
-
-        return true;
-    }
-
-    /**
-     * Execute the request to Prestashop web service
-     *
-     * @param  null  $url
-     * @return array
-     *
-     * @throws GuzzleException
-     * @throws PrestashopWebserviceException
-     * @throws Exception
-     */
-    protected function exec($url = null, mixed $body = null)
-    {
-        if (isset($url)) {
-            $url = $this->formatUrl($url);
-        } elseif (isset($this->resource)) {
-            $url = trim($this->shopUrl(), '/').'/'.trim($this->resource, '/');
-        }
-
-        if ($this->method == 'post') {
-            $headers = [
-                'Content-Type' => 'text/xml; charset=UTF8',
-                'Io-Format' => 'JSON',
-                'Output-Format' => 'JSON',
-            ];
-        } else {
-            $headers = $this->headers;
-        }
-        if ($this->method == 'delete') {
-            $query = ['id' => '['.$body['id'].']'];
-            $body = null; //reset body
-        } else {
-            $query = $this->query();
-        }
-
-        try {
-            $res = $this->http->request(
-                strtoupper($this->method),
-                $url,
-                [
-                    RequestOptions::ALLOW_REDIRECTS,
-                    RequestOptions::AUTH => [$this->token(), null],
-                    RequestOptions::HEADERS => $headers,
-                    RequestOptions::QUERY => $query,
-                    'body' => $body,
-                ],
-            );
-
-            return $res->getBody() ? json_decode($res->getBody(), true) : null;
-        } catch (ServerException|ClientException  $e) {
-            $response = $e->getResponse();
-            $responseBodyAsString = $response->getBody()->getContents();
-            throw new PrestashopWebserviceException($responseBodyAsString, $e->getCode());
-        } catch (Exception $e) {
-            throw new Exception('A global error which is undefined ?');
-        }
-    }
-
-    public function innerFilter($filter)
-    {
-    }
-
-    /**
-     * Add a filter to the web service call
-     *
-     * @param  string|array  $value
-     * @return $this
-     *
-     * @throws Exception
-     */
-    public function filter(string $field, string $operatorOrValue, $value = null): Prestashop
-    {
-        $operator = $value ? $operatorOrValue : '=';
-
-        if (! in_array(strtoupper($operator), Prestashop::FILTER_OPERATORS)) {
-            throw new CouldNotFindFilter('Invalid filter operator');
-        }
-
-        $this->filters[] = [
-            'field' => $field,
-            'operator' => strtoupper($operator),
-            'value' => $value ?: $operatorOrValue,
-        ];
 
         return $this;
     }
@@ -428,8 +217,6 @@ class Prestashop
      */
     protected function query(): array
     {
-        $query = [];
-
         $query = [
             'display' => $this->display ?
                 '['.implode(',', $this->display).']' : 'full',
@@ -514,9 +301,163 @@ class Prestashop
     }
 
     /**
-     * Define the endpoint for the request
+     * Execute the get request
      *
-     * @return string
+     * @throws CouldNotConnectToPrestashopException
+     * @throws Exception
+     */
+    public function get(): array
+    {
+        try {
+            return $this->call('get');
+        } catch (GuzzleException $e) {
+            throw new CouldNotConnectToPrestashopException($e->getMessage());
+        } catch (Exception $e) {
+            throw  new Exception($e->getMessage());
+        }
+    }
+
+    /**
+     * Handle post request
+     *
+     * @throws CouldNotConnectToPrestashopException|PrestashopWebserviceException
+     */
+    public function post($url, $body): array
+    {
+        try {
+            $this->filters = [];
+
+            return $this->call('post', $url, $body);
+        } catch (CouldNotConnectToPrestashopException|ConfigException|GuzzleException $e) {
+            throw new CouldNotConnectToPrestashopException($e->getMessage());
+        }
+    }
+
+    /**
+     * @throws CouldNotConnectToPrestashopException
+     */
+    public function put($url, $body): array
+    {
+        try {
+            return $this->call('put', $url, $body);
+        } catch (Exception|GuzzleException $e) {
+            throw new CouldNotConnectToPrestashopException($e->getMessage());
+        }
+    }
+
+    /**
+     * @throws PrestashopWebserviceException
+     */
+    public function destroy($url, $id): array
+    {
+        try {
+            return $this->call('delete', $url, ['id' => $id]);
+        } catch (GuzzleException|ConfigException|CouldNotConnectToPrestashopException|PrestashopWebserviceException $e) {
+            throw new PrestashopWebserviceException($e->getMessage());
+        }
+    }
+
+    /**
+     * Internal method to make the correct request call
+     *
+     *
+     * @throws ConfigException
+     * @throws CouldNotConnectToPrestashopException
+     * @throws GuzzleException
+     * @throws PrestashopWebserviceException
+     */
+    protected function call(string $method, string $url = null, mixed $body = null): array
+    {
+        $this->method = in_array($method, ['get', 'post', 'put', 'delete']) ? $method : null;
+
+        if ($this->canExecute()) {
+            $result = $this->exec($url, $body);
+
+            return $this->response($result);
+        }
+
+        throw new CouldNotConnectToPrestashopException('Error occur when trying to execute the API call');
+    }
+
+    /**
+     * Check if the request can be executed
+     *
+     *
+     * @throws ConfigException
+     */
+    protected function canExecute(): bool
+    {
+        if (! $this->method) {
+            throw new ConfigException('You need to define a method.');
+        }
+
+        if (! $this->shopUrl()) {
+            throw new ConfigException('No endpoint/ URL defined.');
+        }
+
+        if (! $this->token()) {
+            throw new ConfigException('Token is not configured');
+        }
+
+        return true;
+    }
+
+    /**
+     * Execute the request to Prestashop web service
+     *
+     * @throws GuzzleException
+     * @throws PrestashopWebserviceException
+     * @throws Exception
+     */
+    protected function exec(string $url = null, mixed $body = null): ?array
+    {
+        if (isset($url)) {
+            $url = $this->formatUrl($url);
+        } elseif (isset($this->resource)) {
+            $url = trim($this->shopUrl(), '/').'/'.trim($this->resource, '/');
+        }
+
+        if ($this->method == 'post') {
+            $headers = [
+                'Content-Type' => 'text/xml; charset=UTF8',
+                'Io-Format' => 'JSON',
+                'Output-Format' => 'JSON',
+            ];
+        } else {
+            $headers = $this->headers;
+        }
+        if ($this->method == 'delete') {
+            $query = ['id' => '['.$body['id'].']'];
+            $body = null; //reset body
+        } else {
+            $query = $this->query();
+        }
+
+        try {
+            $res = $this->client->request(
+                strtoupper($this->method),
+                $url,
+                [
+                    RequestOptions::ALLOW_REDIRECTS,
+                    RequestOptions::AUTH => [$this->token(), null],
+                    RequestOptions::HEADERS => $headers,
+                    RequestOptions::QUERY => $query,
+                    'body' => $body,
+                ],
+            );
+
+            return $res->getBody() ? json_decode((string) $res->getBody(), true) : null;
+        } catch (ServerException|ClientException  $e) {
+            $response = $e->getResponse();
+            $responseBodyAsString = $response->getBody()->getContents();
+            throw new PrestashopWebserviceException($responseBodyAsString, $e->getCode());
+        } catch (Exception) {
+            throw new Exception('A global error which is undefined ?');
+        }
+    }
+
+    /**
+     * Define the endpoint for the request
      */
     protected function shopUrl(): ?string
     {
@@ -538,10 +479,6 @@ class Prestashop
 
     /**
      * Handle basic response
-     *
-     * @param  array  $response
-     *
-     * @throws CouldNotConnectException
      */
     protected function response(?array $response): array
     {
@@ -582,5 +519,10 @@ class Prestashop
             return new $class($this, $arguments);
         }
         throw new CouldNotFindResource();
+    }
+
+    public function pushFilter(array $array): void
+    {
+        $this->filters[] = $array;
     }
 }

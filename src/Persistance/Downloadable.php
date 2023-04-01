@@ -3,7 +3,9 @@
 namespace LucasGiovanny\LaravelPrestashop\Persistance;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use LucasGiovanny\LaravelPrestashop\Prestashop;
+use Psr\Http\Message\StreamInterface;
 
 trait Downloadable
 {
@@ -12,11 +14,11 @@ trait Downloadable
     abstract public function getDownloadUrl(): string;
 
     /**
-     * @return mixed Binary representation of file
+     * @return StreamInterface Binary representation of file
      *
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws GuzzleException
      */
-    public function download()
+    public function download(): StreamInterface
     {
         $client = new Client();
 

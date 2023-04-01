@@ -2,42 +2,92 @@
 
 namespace LucasGiovanny\LaravelPrestashop\Resources;
 
-use Illuminate\Support\Facades\App;
+use Illuminate\Support\Collection;
 use Illuminate\Support\MessageBag;
 use Illuminate\Validation\Validator;
+use JsonSerializable;
 use LucasGiovanny\LaravelPrestashop\Prestashop;
 
-abstract class Model implements \JsonSerializable
+abstract class Model implements JsonSerializable
 {
     /**
-     * @var Prestashop
+     * The model's attributes
      */
-    protected $connection = null;
+    protected array $attributes = [];
+
+    public function __construct(protected Prestashop $prestashop)
+    {
+    }
 
     /**
-     * @var array The model's attributes
+     * Get the model's attributes
      */
-    protected $attributes = [];
+    public function attributes(): array
+    {
+        return $this->attributes;
+    }
+
+    /**
+     * Fill the model attributes from an array
+     */
+    protected function fill(array $attributes)
+    {
+        foreach ($this->fillableFromArray($attributes) as $key => $value) {
+            if ($this->isFillable($key)) {
+                $this->setAttribute($key, $value);
+            }
+        }
+    }
+
+    /**
+     * Get the fillable attributes of an array
+     */
+    protected function fillableFromArray(array $attributes): array
+    {
+        if (count($this->fillable) > 0) {
+            return array_intersect_key($attributes, array_flip($this->fillable));
+        }
+
+        return $attributes;
+    }
+
+    /**
+     * Determine if the given attribute may be filled
+     */
+    protected function isFillable($key): bool
+    {
+        return in_array($key, $this->fillable);
+    }
+
+    /**
+     * Set model attribute
+     */
+    protected function setAttribute($key, $value): void
+    {
+        $this->attributes[$key] = $value;
+    }
+
+    public function all(): Collection
+    {
+        return $this->prestashop->get();
+    }
+
+    /*!!!!!***** Refactor from here ****/
 
     /**
      * @deferred array The model's collection values
      */
-    protected $deferred = [];
+    protected array $deferred = [];
 
     /**
      * @var array The model's fillable attributes
      */
-    protected $fillable = [];
-
-    /**
-     * @var string the xml header
-     */
-    protected $xml_header = '';
+    protected array $fillable = [];
 
     /**
      * @var string The URL endpoint of this model
      */
-    protected $url = '';
+    protected $url;
 
     /**
      * @var string Name of the primary key for this model
@@ -71,16 +121,6 @@ abstract class Model implements \JsonSerializable
      * @var Validator
      */
     protected $validator;
-
-    public function __construct(Prestashop $connection = null, $attributes = [], Validator $validator = null)
-    {
-        //Set connection if there is, otherwise use Facade with default settings
-        if (isset($connection)) {
-            $this->connection = $connection;
-        }
-        $this->validator = $validator ?: App::make('validator');
-        $this->fill($attributes);
-    }
 
     public function getRules(): array
     {
@@ -153,16 +193,6 @@ abstract class Model implements \JsonSerializable
     }
 
     /**
-     * Get the model's attributes.
-     *
-     * @return array
-     */
-    public function attributes()
-    {
-        return $this->attributes;
-    }
-
-    /**
      * Get the model's url.
      */
     public function url($id = null): string
@@ -192,48 +222,14 @@ abstract class Model implements \JsonSerializable
         return $this->__get($this->primaryKey);
     }
 
-    /**
-     * Fill the entity from an array.
-     */
-    protected function fill(array $attributes)
-    {
-        foreach ($this->fillableFromArray($attributes) as $key => $value) {
-            if ($this->isFillable($key)) {
-                $this->setAttribute($key, $value);
-            }
-        }
-    }
-
-    /**
-     * Get the fillable attributes of an array.
-     */
-    protected function fillableFromArray(array $attributes): array
-    {
-        if (count($this->fillable) > 0) {
-            return array_intersect_key($attributes, array_flip($this->fillable));
-        }
-
-        return $attributes;
-    }
-
     protected function addFillable($key)
     {
         $this->fillable[] = $key;
     }
 
-    protected function isFillable($key)
-    {
-        return in_array($key, $this->fillable);
-    }
-
     public function getFillable()
     {
         return $this->fillable;
-    }
-
-    protected function setAttribute($key, $value)
-    {
-        $this->attributes[$key] = $value;
     }
 
     public function __get($key)
@@ -259,11 +255,6 @@ abstract class Model implements \JsonSerializable
     public function __isset($name)
     {
         return $this->__get($name) !== null;
-    }
-
-    public function __call($name, $arguments)
-    {
-        return $this->__get($name);
     }
 
     /**

@@ -7,7 +7,7 @@ use LucasGiovanny\LaravelPrestashop\Query;
 
 class PriceRanges extends Model
 {
-    use Query\Findable;
+    use Query\Searchable;
     use Persistance\Storable;
 
     protected static $rules = [
@@ -16,7 +16,7 @@ class PriceRanges extends Model
         'delimiter2' => 'required|numeric',
     ];
 
-    protected $fillable = [
+    protected array $fillable = [
         'id_carrier',
         'delimiter1',
         'delimiter2',

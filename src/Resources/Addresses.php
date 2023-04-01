@@ -7,7 +7,7 @@ use LucasGiovanny\LaravelPrestashop\Query;
 
 class Addresses extends Model
 {
-    use Query\Findable;
+    use Query\Searchable;
     use Persistance\Storable;
 
     protected static $rules = [
@@ -28,7 +28,7 @@ class Addresses extends Model
         'alias.required' => 'Alias is required',
     ];
 
-    protected $fillable = [
+    protected array $fillable = [
         'id',
         'id_customer',
         'id_country',

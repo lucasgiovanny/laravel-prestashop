@@ -2,13 +2,11 @@
 
 namespace LucasGiovanny\LaravelPrestashop\Resources;
 
-use LucasGiovanny\LaravelPrestashop\Persistance;
 use LucasGiovanny\LaravelPrestashop\Query;
 
-class Orders extends Model
+class Order extends Model
 {
-    use Query\Findable;
-    use Persistance\Storable;
+    use Query\Searchable;
 
     protected static $rules = [
         'id_address_delivery' => 'required|numeric',
@@ -25,7 +23,6 @@ class Orders extends Model
         'total_products' => 'required|numeric',
         'total_products_wt' => 'required|numeric',
         'conversion_rate' => 'required|numeric',
-
         'associations.order_rows' => 'array',
         'associations.order_rows.*.product_id' => 'required|numeric',
         'associations.order_rows.*.product_attribute_id' => 'nullable|numeric',
@@ -40,7 +37,6 @@ class Orders extends Model
         'associations.order_rows.*.unit_price_tax_excl' => 'nullable|numeric',
     ];
 
-    //Use this for custom messages
     protected static $messages = [
         'id_address_delivery.required' => 'Delivery address is required',
         'id_address_invoice.required' => 'Invoice address is required',
@@ -57,7 +53,7 @@ class Orders extends Model
         'total_products_wt.required' => 'Total products wt is required',
     ];
 
-    protected $fillable = [
+    protected array $fillable = [
         'id',
         'id_address_delivery',
         'id_address_invoice',
@@ -125,8 +121,4 @@ class Orders extends Model
             $this->attributes['associations'] = $associations;
         }
     }
-
-    protected $xml_header = 'order';
-
-    protected $url = 'orders';
 }

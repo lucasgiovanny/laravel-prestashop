@@ -3,7 +3,7 @@
 namespace LucasGiovanny\LaravelPrestashop\Persistance;
 
 use Illuminate\Support\Collection;
-use LucasGiovanny\LaravelPrestashop\Exceptions\CouldNotConnectException;
+use LucasGiovanny\LaravelPrestashop\Exceptions\CouldNotConnectToPrestashopException;
 use LucasGiovanny\LaravelPrestashop\Exceptions\ResourceMissingAttributes;
 use LucasGiovanny\LaravelPrestashop\Prestashop;
 use LucasGiovanny\LaravelPrestashop\Resources\Model;
@@ -35,7 +35,7 @@ trait Storable
     /**
      * @return $this
      *
-     * @throws CouldNotConnectException
+     * @throws CouldNotConnectToPrestashopException
      * @throws ResourceMissingAttributes
      */
     public function save(array $options = [])
@@ -56,7 +56,7 @@ trait Storable
     /**
      * @return array|bool|Collection|null
      *
-     * @throws CouldNotConnectException
+     * @throws CouldNotConnectToPrestashopException
      */
     private function insert()
     {
@@ -67,7 +67,7 @@ trait Storable
 
     /**
      * @throws ResourceMissingAttributes
-     * @throws CouldNotConnectException
+     * @throws CouldNotConnectToPrestashopException
      */
     public function create(array $attributes)
     {
@@ -87,7 +87,7 @@ trait Storable
     /**
      * @return array|bool|Collection|null
      *
-     * @throws CouldNotConnectException
+     * @throws CouldNotConnectToPrestashopException
      */
     private function update(): array
     {
@@ -100,7 +100,7 @@ trait Storable
     /**
      * @return Collection|null
      *
-     * @throws CouldNotConnectException
+     * @throws CouldNotConnectToPrestashopException
      */
     public function delete()
     {
