@@ -31,6 +31,7 @@
     "require-dev": {
         "brianium/paratest": "^6.2",
         "laravel/pint": "^1.7",
+        "nunomaduro/larastan": "^2.0.1",
         "nunomaduro/collision": "^6.0",
         "orchestra/testbench": "^7.0",
         "pestphp/pest": "^1.21",
