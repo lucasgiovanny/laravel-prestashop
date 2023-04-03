@@ -4,7 +4,7 @@ namespace LucasGiovanny\LaravelPrestashop\Resources;
 
 use LucasGiovanny\LaravelPrestashop\Query;
 
-class Order extends Model
+class Order extends Resource
 {
     use Query\Searchable;
 
@@ -41,12 +41,12 @@ class Order extends Model
         'id_address_delivery.required' => 'Delivery address is required',
         'id_address_invoice.required' => 'Invoice address is required',
         'id_cart.required' => 'Cart is required',
-        'id_currency.required' => 'currency is required',
+        'id_currency.required' => 'Currency is required',
         'id_lang.required' => 'Lang is required',
         'id_customer.required' => 'Customer is required',
-        'id_carrier.required' => 'carrier is required',
+        'id_carrier.required' => 'Carrier is required',
         'module.required' => 'Module is required',
-        'current_state.required' => 'current state is required! options are: <option value="5">Afgeleverd</option><option value="15">Awaiting Mollie payment</option><option value="2">Betaling aanvaard</option><option value="11">Betaling op afstand aanvaard</option><option value="8">Betalingsfout</option><option value="17">Completed</option><option value="6">Geannuleerd</option><option value="10">In afwachting van bankoverschrijving</option><option value="18">Klarna payment authorized</option><option value="19">Klarna payment shipped</option><option value="14">Mollie partially refunded</option><option value="9">Momenteel in backorder (betaald)</option><option value="12">Momenteel in backorder (niet betaald)</option><option value="16">Partially shipped</option><option value="7">Terugbetaald</option><option value="4">Verzonden</option><option value="13">Wachten op bevestiging (rembours)</option><option value="1">Wachtend op uw betaling</option><option value="3">Wordt momenteel voorbereid</option>',
+        'current_state.required' => 'Current state is required!',
         'total_paid.required' => 'Total paid is required',
         'total_paid_real.required' => 'Total paid real is required',
         'total_products.required' => 'Total products is required',

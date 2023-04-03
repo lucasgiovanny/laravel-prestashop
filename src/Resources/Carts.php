@@ -5,7 +5,7 @@ namespace LucasGiovanny\LaravelPrestashop\Resources;
 use LucasGiovanny\LaravelPrestashop\Persistance;
 use LucasGiovanny\LaravelPrestashop\Query;
 
-class Carts extends Model
+class Carts extends Resource
 {
     use Query\Searchable;
     use Persistance\Storable;

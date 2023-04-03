@@ -5,7 +5,7 @@ namespace LucasGiovanny\LaravelPrestashop\Query;
 use LucasGiovanny\LaravelPrestashop\Exceptions\CouldNotConnectToPrestashopException;
 use LucasGiovanny\LaravelPrestashop\Exceptions\InvalidePrestashopFilterException;
 use LucasGiovanny\LaravelPrestashop\Prestashop;
-use LucasGiovanny\LaravelPrestashop\Resources\Model;
+use LucasGiovanny\LaravelPrestashop\Resources\Resource;
 
 trait Searchable
 {
@@ -46,7 +46,7 @@ trait Searchable
      *
      * @throws CouldNotConnectToPrestashopException
      */
-    public function find(int $id): Model|null
+    public function find(int $id): Resource|null
     {
         $this->prestashop->cleanFilters();
 

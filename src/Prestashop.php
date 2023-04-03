@@ -112,6 +112,11 @@ class Prestashop
     protected array $filters = [];
 
     /**
+     * Field from the resource to be added to the request
+     */
+    protected array $display = [];
+
+    /**
      * Construct the class with dependencies
      */
     public function __construct(protected ?HttpClient $client = null)
@@ -141,11 +146,6 @@ class Prestashop
      * Resource that will be called
      */
     protected ?string $resource = null;
-
-    /**
-     * Field from the resource to be added to the request
-     */
-    protected array $display = [];
 
     /**
      * Define the limit for the request
@@ -511,7 +511,7 @@ class Prestashop
     {
         $method = strtolower($method);
         if (in_array(strtolower($method), self::RESOURCES)) {
-            //@todo return Model instance
+            //@todo return Resource instance
             $this->resource = $method;
 
             $class = "\LucasGiovanny\LaravelPrestashop\Resources\\".ucfirst($method);
@@ -524,5 +524,10 @@ class Prestashop
     public function pushFilter(array $array): void
     {
         $this->filters[] = $array;
+    }
+
+    public function addDisplayField(array|string $fields): void
+    {
+        $this->display = is_array($fields) ? $fields : [$fields];
     }
 }

@@ -11,7 +11,7 @@
 |
 */
 
-uses(\LucasGiovanny\LaravelPrestashop\Tests\TestCase::class)->in(__DIR__);
+uses(\LucasGiovanny\LaravelPrestashop\Tests\TestCase::class)->in('Resources');
 
 /*
 |--------------------------------------------------------------------------

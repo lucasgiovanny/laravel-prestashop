@@ -6,7 +6,7 @@ use Illuminate\Support\Collection;
 use LucasGiovanny\LaravelPrestashop\Exceptions\CouldNotConnectToPrestashopException;
 use LucasGiovanny\LaravelPrestashop\Exceptions\ResourceMissingAttributes;
 use LucasGiovanny\LaravelPrestashop\Prestashop;
-use LucasGiovanny\LaravelPrestashop\Resources\Model;
+use LucasGiovanny\LaravelPrestashop\Resources\Resource;
 use LucasGiovanny\LaravelPrestashop\SimpleXMLExtended;
 
 trait Storable
@@ -139,7 +139,7 @@ trait Storable
      */
     protected function createXmlFromModel($model)
     {
-        if ($model instanceof Model) {
+        if ($model instanceof Resource) {
             $subModule = $model->xml_header;
             $xml_data = new SimpleXMLExtended('<prestashop xmlns:xlink="http://www.w3.org/1999/xlink"/>');
 

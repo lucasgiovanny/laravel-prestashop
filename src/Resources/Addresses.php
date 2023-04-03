@@ -5,7 +5,7 @@ namespace LucasGiovanny\LaravelPrestashop\Resources;
 use LucasGiovanny\LaravelPrestashop\Persistance;
 use LucasGiovanny\LaravelPrestashop\Query;
 
-class Addresses extends Model
+class Addresses extends Resource
 {
     use Query\Searchable;
     use Persistance\Storable;

@@ -9,15 +9,36 @@ use JsonSerializable;
 use LucasGiovanny\LaravelPrestashop\Exceptions\CouldNotConnectToPrestashopException;
 use LucasGiovanny\LaravelPrestashop\Prestashop;
 
-abstract class Model implements JsonSerializable
+abstract class Resource implements JsonSerializable
 {
     /**
-     * The model's attributes
+     * The resource attributes
      */
     protected array $attributes = [];
 
+    /**
+     * The resource fillable attributes
+     */
+    protected array $fillable = [];
+
+    /**
+     + The URL endpoint of this model
+     */
+    protected string $url = '';
+
     public function __construct(protected Prestashop $prestashop)
     {
+        $this->boot();
+    }
+
+    /**
+     * Boot resource
+     */
+    protected function boot(): void
+    {
+        if (! $this->url) {
+            $this->url = str(class_basename($this))->plural()->lower()->snake();
+        }
     }
 
     /**
@@ -68,12 +89,31 @@ abstract class Model implements JsonSerializable
         $this->attributes[$key] = $value;
     }
 
+    public function select(string|array $fields): self
+    {
+        $this->prestashop->addDisplayField($fields);
+
+        return $this;
+    }
+
     /**
      * Return all the registers from API
      *
      * @throws CouldNotConnectToPrestashopException
      */
     public function all(): Collection
+    {
+        $this->prestashop->cleanFilters();
+
+        return $this->get();
+    }
+
+    /**
+     * Perform a GET request to the API
+     *
+     * @throws CouldNotConnectToPrestashopException
+     */
+    public function get(): Collection
     {
         $collection = new Collection();
 
@@ -86,22 +126,30 @@ abstract class Model implements JsonSerializable
         return $collection;
     }
 
+    /**
+     * Magic method to get attribute
+     */
+    public function __get($key): mixed
+    {
+        return $this->attributes[$key] ?? null;
+    }
+
+    /**
+     * Magic method to set attribute
+     */
+    public function __set($key, $value)
+    {
+        if ($this->isFillable($key)) {
+            $this->setAttribute($key, $value);
+        }
+    }
+
     /*!!!!!***** Refactor from here ****/
 
     /**
      * @deferred array The model's collection values
      */
     protected array $deferred = [];
-
-    /**
-     * @var array The model's fillable attributes
-     */
-    protected array $fillable = [];
-
-    /**
-     * @var string The URL endpoint of this model
-     */
-    protected $url;
 
     /**
      * @var string Name of the primary key for this model
@@ -199,14 +247,6 @@ abstract class Model implements JsonSerializable
     }
 
     /**
-     * Get the connection instance.
-     */
-    public function connection(): Prestashop
-    {
-        return $this->connection;
-    }
-
-    /**
      * Get the model's url.
      */
     public function url($id = null): string
@@ -244,26 +284,6 @@ abstract class Model implements JsonSerializable
     public function getFillable()
     {
         return $this->fillable;
-    }
-
-    public function __get($key)
-    {
-        if (isset($this->attributes[$key])) {
-            return $this->attributes[$key];
-        }
-    }
-
-    public function __set($key, $value)
-    {
-        if ($this->isFillable($key)) {
-            if (is_array($value)) {
-                $this->deferred[$key] = $value;
-
-                return;
-            }
-
-            $this->setAttribute($key, $value);
-        }
     }
 
     public function __isset($name)
