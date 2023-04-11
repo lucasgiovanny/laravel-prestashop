@@ -1,5 +1,5 @@
 
-![Laravel Prestashop](https://laravel-prestashop.lucasgiovanny.com/assets/img/laravel-prestashop.png)
+<img src="art/logo.png" width="500" alt="Laravel Prestashop">
 
 This package still in development. Feel free to contribute and give ideas!
 
