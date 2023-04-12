@@ -4,7 +4,9 @@ namespace Lucasgiovanny\LaravelPrestashop;
 
 use Exception;
 use GuzzleHttp\Client as HttpClient;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
+use Illuminate\Support\Collection;
 use Lucasgiovanny\LaravelPrestashop\Models\Resource;
 use Illuminate\Support\Str;
 
@@ -16,6 +18,7 @@ class Prestashop
      */
     public const RESOURCES = [
         'addresses',
+        'attachments',
         'carriers',
         'cart_rules',
         'carts',
@@ -103,66 +106,67 @@ class Prestashop
      *
      * @var string
      */
-    public $resource;
+    public string $resource;
 
     /**
      * Field from the resource to be added to the request
      *
      * @var array
      */
-    public $display;
+    public array $display;
 
     /**
      * Filters to be added to the request
      *
      * @var array
      */
-    public $filters;
+    public array $filters;
 
     /**
      * Define the limit for the request
      *
      * @var array|int
      */
-    public $limit;
+    public array|int $limit;
 
     /**
      * Define the sort fields for the request
      *
      * @var array
      */
-    public $sort;
+    public array $sort;
 
     /**
      * On-demand endpoint definition
      *
      * @var string
      */
-    public $endpoint;
+    public string $endpoint;
 
     /**
      * On-demand token definition
      *
      * @var string
      */
-    public $token;
+    public string $token;
 
     /**
      * Shop ID
      *
-     * @var string
+     * @var int
      */
-    public $shop;
+    public int $shop;
 
     /**
      * Headers for request
      *
      * @var array
      */
-    protected $headers = [
+    protected array $headers = [
         'Io-Format' => 'JSON',
         'Output-Format' => 'JSON',
     ];
+    private ?string $method;
 
     /**
      * Construct the class with dependencies
@@ -180,11 +184,11 @@ class Prestashop
      *
      * @param string $endpoint
      * @param string $token
-     * @param int    $shop
+     * @param int|null $shop
      *
      * @return $this
      */
-    public function shop(string $endpoint, string $token, int $shop = null)
+    public function shop(string $endpoint, string $token, int $shop = null): static
     {
         $this->endpoint = $endpoint;
         $this->token = $token;
@@ -198,11 +202,11 @@ class Prestashop
      *
      * @param string $endpoint
      * @param string $token
-     * @param int    $shop
+     * @param int|null $shop
      *
      * @return $this
      */
-    public function store(string $endpoint, string $token, int $shop = null)
+    public function store(string $endpoint, string $token, int $shop = null): static
     {
         $this->shop($endpoint, $token, $shop);
 
@@ -217,7 +221,7 @@ class Prestashop
      *
      * @return $this
      */
-    public function resource(string $resource, ...$arguments)
+    public function resource(string $resource, ...$arguments): static
     {
         $this->resource = $resource;
 
@@ -228,11 +232,11 @@ class Prestashop
      * Define the request limit or index and limit
      *
      * @param int $limit
-     * @param int $index
+     * @param int|null $index
      *
      * @return $this
      */
-    public function limit(int $limit, int $index = null)
+    public function limit(int $limit, int $index = null): static
     {
         $this->limit = $index ? [$index, $limit] : $limit;
 
@@ -247,7 +251,7 @@ class Prestashop
      *
      * @return $this
      */
-    protected function sort(string $field, string $order)
+    protected function sort(string $field, string $order): static
     {
         $this->sort[] = [
             'value' => $field,
@@ -264,7 +268,7 @@ class Prestashop
      *
      * @return $this
      */
-    public function sortBy(string $field)
+    public function sortBy(string $field): static
     {
         $this->sort($field, "ASC");
 
@@ -278,7 +282,7 @@ class Prestashop
      *
      * @return $this
      */
-    public function sortByDesc(string $field)
+    public function sortByDesc(string $field): static
     {
         $this->sort($field, "DESC");
 
@@ -292,7 +296,7 @@ class Prestashop
      *
      * @return $this
      */
-    public function orderBy(string $field)
+    public function orderBy(string $field): static
     {
         $this->sort($field, "ASC");
 
@@ -306,7 +310,7 @@ class Prestashop
      *
      * @return $this
      */
-    public function orderByDesc(string $field)
+    public function orderByDesc(string $field): static
     {
         $this->sort($field, "DESC");
 
@@ -316,11 +320,11 @@ class Prestashop
     /**
      * Shortcut for display method
      *
-     * @param string|array $fields
+     * @param array|string $fields
      *
      * @return $this
      */
-    public function select($fields)
+    public function select(array|string $fields): static
     {
         return $this->display($fields);
     }
@@ -328,11 +332,11 @@ class Prestashop
     /**
      * Select fields to be returned by web service
      *
-     * @param string|array $fields
+     * @param array|string $fields
      *
      * @return $this
      */
-    public function display($fields)
+    public function display(array|string $fields): static
     {
         $this->display = is_array($fields) ? $fields : [$fields];
 
@@ -342,13 +346,14 @@ class Prestashop
     /**
      * Add a filter to the web service call
      *
-     * @param string       $field
-     * @param string       $operatorOrValue
-     * @param string|array $value
+     * @param string $field
+     * @param string $operatorOrValue
+     * @param array|string|null $value
      *
      * @return $this
+     * @throws Exception
      */
-    public function filter(string $field, string $operatorOrValue, $value = null)
+    public function filter(string $field, string $operatorOrValue, array|string $value = null): static
     {
         $operator = $value ? $operatorOrValue : '=';
 
@@ -368,13 +373,14 @@ class Prestashop
     /**
      * Shortcut to filter method
      *
-     * @param string       $field
-     * @param string       $operatorOrValue
-     * @param string|array $value
+     * @param string $field
+     * @param string $operatorOrValue
+     * @param array|string|null $value
      *
      * @return $this
+     * @throws Exception
      */
-    public function where(string $field, string $operatorOrValue, $value = null)
+    public function where(string $field, string $operatorOrValue, array|string $value = null): static
     {
         return $this->filter($field, $operatorOrValue, $value);
     }
@@ -382,9 +388,10 @@ class Prestashop
     /**
      * Execute the get request
      *
-     * @return \Illuminate\Support\Collection
+     * @return Collection
+     * @throws Exception|GuzzleException
      */
-    public function get()
+    public function get(): Collection
     {
         return $this->call("get");
     }
@@ -392,9 +399,10 @@ class Prestashop
     /**
      * Execute the get request and return first result
      *
-     * @return \Illuminate\Support\Collection|null
+     * @return Collection|null
+     * @throws Exception|GuzzleException
      */
-    public function first()
+    public function first(): ?Collection
     {
         $get = $this->call("get");
 
@@ -406,9 +414,10 @@ class Prestashop
      *
      * @param int $id
      *
-     * @return \Illuminate\Support\Collection|null
+     * @return Collection|null
+     * @throws Exception|GuzzleException
      */
-    public function find(int $id)
+    public function find(int $id): ?Collection
     {
         if ($this->filters) {
             throw new Exception("You can not use find method along with filters");
@@ -432,11 +441,11 @@ class Prestashop
      *
      * @param string $method
      *
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      *
-     * @throws Exception
+     * @throws Exception|GuzzleException
      */
-    protected function call(string $method)
+    protected function call(string $method): Collection
     {
         $this->method = in_array($method, ["get", "post", "put", "delete"]) ? $method : null;
 
@@ -454,7 +463,7 @@ class Prestashop
      *
      * @throws Exception
      */
-    protected function canExecute()
+    protected function canExecute(): bool
     {
         if (! $this->resource) {
             throw new Exception("You need to define a resource.");
@@ -478,9 +487,10 @@ class Prestashop
     /**
      * Execute the request to Prestashop web service
      *
-     * @return array
+     * @return array|null
+     * @throws GuzzleException
      */
-    protected function exec()
+    protected function exec(): ?array
     {
         $url = trim($this->url(), "/") . "/" . trim($this->resource, "/");
 
@@ -495,7 +505,8 @@ class Prestashop
             ]
         );
 
-        return $res->getBody() ? json_decode($res->getBody(), true) : null;
+        return $res->getBody() ? json_decode((string) $res->getBody(), true) : null;
+
     }
 
     /**
@@ -503,7 +514,7 @@ class Prestashop
      *
      * @return array
      */
-    protected function query()
+    protected function query(): array
     {
         $query = [
             'display' => $this->display ?
@@ -570,7 +581,7 @@ class Prestashop
      *
      * @return string
      */
-    protected function token()
+    protected function token(): string
     {
         return $this->token ?: config('prestashop.shop.token');
     }
@@ -580,7 +591,7 @@ class Prestashop
      *
      * @return string
      */
-    protected function url()
+    protected function url(): string
     {
         return $this->endpoint ?: config('prestashop.shop.endpoint');
     }
@@ -588,13 +599,13 @@ class Prestashop
     /**
      * Format and delivery the response as Laravel Collection
      *
-     * @param array $response
+     * @param array|null $response
      *
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      *
      * @throws Exception
      */
-    protected function response(?array $response)
+    protected function response(?array $response): Collection
     {
         if (! $response) {
             throw new Exception("No response from server");
@@ -613,9 +624,10 @@ class Prestashop
      * Create the method for each web service resource
      *
      * @param string $method
-     * @param array  $arguments
+     * @param array $arguments
      *
-     * @return mixed
+     * @return Prestashop
+     * @throws Exception
      */
     public function __call(string $method, array $arguments)
     {

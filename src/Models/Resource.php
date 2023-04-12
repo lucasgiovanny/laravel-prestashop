@@ -8,9 +8,8 @@ class Resource
      * Construct the resource model with attributes
      *
      * @param string $resource
-     * @param array  $attributes
+     * @param array|null $attributes
      *
-     * @return void
      */
     public function __construct(public string $resource, public ?array $attributes = null)
     {
