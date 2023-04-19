@@ -18,4 +18,8 @@ class CartRows extends Resource
         'id_customization',
         'quantity',
     ];
+
+    protected $xml_header = 'cart_row';
+
+    protected $url = 'cart_rows';
 }

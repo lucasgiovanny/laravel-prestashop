@@ -37,8 +37,8 @@ class Carts extends Resource
         'id_lang.required' => 'Lang is required',
         'associations.required' => 'associations is required',
         'associations.array' => 'associations must be an array',
-        'associations.cart_rows.required' => 'cart_rows is required',
-        'associations.cart_rows.array' => 'cart_rows must be an array',
+        'associations.cart_rows.required' => 'Cart Rows is required',
+        'associations.cart_rows.array' => 'Cart Rows must be an array',
     ];
 
     protected array $fillable = [
@@ -67,19 +67,6 @@ class Carts extends Resource
     protected array $attributes = [
         'associations' => [],
     ];
-
-    public function setAssociationsAttribute($associations)
-    {
-        if (isset($associations['cart_rows'])) {
-            $array = [];
-            foreach ($associations['cart_rows'] as $k => $association) {
-                $array['cart_row'.$k] = $association;
-            }
-            $this->attributes['associations']['cart_rows'] = $array;
-        } else {
-            $this->attributes['associations'] = $associations;
-        }
-    }
 
     protected $xml_header = 'cart';
 

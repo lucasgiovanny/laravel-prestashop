@@ -104,21 +104,8 @@ class Order extends Resource
         'associations',
     ];
 
-    /**
-     * Setting attribute for associations with right keys
-     *
-     * @return void
-     */
-    public function setAssociationsAttribute($associations)
-    {
-        if (isset($associations['order_rows'])) {
-            $array = [];
-            foreach ($associations['order_rows'] as $k => $association) {
-                $array['order_row'.$k] = $association;
-            }
-            $this->attributes['associations']['order_rows'] = $array;
-        } else {
-            $this->attributes['associations'] = $associations;
-        }
-    }
+    protected $xml_header = 'order';
+
+    protected $url = 'orders';
+
 }

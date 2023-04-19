@@ -10,6 +10,25 @@ class OrderInvoices extends Resource
     use Query\Searchable;
     use Persistance\Storable;
 
+    protected static $rules = [
+        'id_order' => 'required|numeric',
+        'number' => 'required|numeric',
+        'delivery_number' => 'nullable|numeric',
+        'delivery_date' => 'nullable|date',
+        'date_add' => 'nullable|date',
+
+    ];
+
+    protected static $messages = [
+        'id_order.required' => 'Order is required',
+        'id_order.numeric' => 'Order must be numeric',
+        'number.required' => 'Number is required',
+        'number.numeric' => 'Number must be numeric',
+        'delivery_number.numeric' => 'Delivery number must be numeric',
+        'delivery_date.date' => 'Delivery date must be a date',
+        'date_add.date' => 'Date must be a date',
+    ];
+
     protected array $fillable = [
         'id',
         'id_order',
@@ -31,6 +50,8 @@ class OrderInvoices extends Resource
         'note',
         'date_add',
     ];
+
+    protected $xml_header = 'order_invoice';
 
     protected $url = 'order_invoices';
 }
