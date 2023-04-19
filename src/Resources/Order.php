@@ -107,5 +107,4 @@ class Order extends Resource
     protected $xml_header = 'order';
 
     protected $url = 'orders';
-
 }

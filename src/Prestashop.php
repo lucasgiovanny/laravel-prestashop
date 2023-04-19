@@ -313,7 +313,7 @@ class Prestashop
         } catch (GuzzleException $e) {
             throw new CouldNotConnectToPrestashopException($e->getMessage());
         } catch (Exception $e) {
-            throw  new Exception($e->getMessage());
+            throw new Exception($e->getMessage());
         }
     }
 

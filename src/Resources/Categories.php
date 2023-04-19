@@ -4,7 +4,6 @@ namespace Lucasgiovanny\LaravelPrestashop\Resources;
 
 class Categories extends Resource
 {
-
     protected static $rules = [
         'id_parent' => 'nullable|numeric',
         'level_depth' => 'nullable|numeric',

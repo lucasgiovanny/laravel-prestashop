@@ -126,6 +126,7 @@ class OrderDetails extends Resource
         'total_refunded_tax_incl',
         'associations',
     ];
+
     protected $xml_header = 'order_detail';
 
     protected $url = 'order_details';
